@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "deploy": "vite build && gh-pages -d dist"
+    "deploy": "vite build && gh-pages -d dist -r git@github.com:aadjones/frog-math.git"
   },
   "devDependencies": {
     "gh-pages": "^6.3.0",
