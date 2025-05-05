@@ -1,5 +1,6 @@
 /// <reference types="p5/global" />
 import p5 from 'p5';
+import { MS_PER_PAD, hopDuration, playbackRate, nextIndex } from './frogPhysics';
 
 const gap = 60;
 const canvas = { w: 600, h: 160 };
@@ -9,33 +10,36 @@ let hopSize = 3;
 let hopStart = 0;
 let fromIdx = 0;
 let toIdx = 0;
-const HOP_DUR = 300; // ms
-let canvasEl: HTMLCanvasElement;
-let debugMode = false;
+let hopDur = MS_PER_PAD;  // Will be calculated based on distance
+let debugMode = true;  // Show numbers by default
+let audioCtx: AudioContext;
+let samples: HTMLAudioElement[] = [];
 
 const worldX = (idx: number) => idx * gap;
 
 new p5(p => {
-  function onCanvasClick(e: MouseEvent) {
-    // Ignore clicks if the frog is mid‑hop
-    if (p.millis() - hopStart < HOP_DUR) return;
+  function playHopSound() {
+    const src = samples[Math.floor(Math.random() * samples.length)];
+    const clip = src.cloneNode() as HTMLAudioElement;
 
-    // Translate screen → canvas → world coords
-    const rect = canvasEl.getBoundingClientRect();
-    const xInCanvas = e.clientX - rect.left;
-    const camX =
-      p.lerp(fromIdx, toIdx, p.constrain((p.millis() - hopStart) / HOP_DUR, 0, 1)) *
-        gap -
-      canvas.w / 2;
-    const clickWorldX = xInCanvas + camX;
-    const idx = Math.round(clickWorldX / gap);
+    // compute playbackRate so that clipDuration / rate === hopSec
+    const rate = playbackRate(hopDur);
+    clip.playbackRate = p.constrain(rate, 0.5, 2.0);   // clamp if you like
 
-    if ((idx - frogIdx) % hopSize === 0) {
-      fromIdx = frogIdx;
-      toIdx = idx;
-      frogIdx = idx;
-      hopStart = p.millis();
-    }
+    clip.volume = 0.7;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    clip.play().catch(() => {});
+  }
+
+  function startHop(direction: 1 | -1) {
+    const targetIdx = hopSize === 0 ? frogIdx : nextIndex(frogIdx, hopSize, direction);
+    const padsTravelled = Math.abs(targetIdx - frogIdx);
+    hopDur = hopDuration(padsTravelled);
+    fromIdx = frogIdx;
+    toIdx = targetIdx;
+    frogIdx = targetIdx;
+    hopStart = p.millis();
+    playHopSound();
   }
 
   function toggleDebug() {
@@ -50,10 +54,16 @@ new p5(p => {
   }
 
   p.setup = () => {
-    const renderer = p.createCanvas(canvas.w, canvas.h);
-    canvasEl = renderer.canvas;          // save reference
-    canvasEl.addEventListener('click', onCanvasClick);
+    p.createCanvas(canvas.w, canvas.h);
     p.textSize(24);
+
+    // Initialize audio context
+    audioCtx = new AudioContext();
+    
+    // Load sound sample
+    const hopSound = new Audio('/sounds/frog-math-hop.mp3');
+    hopSound.preload = 'auto';
+    samples = [hopSound];
 
     // Create debug controls container
     const debugControls = document.createElement('div');
@@ -76,13 +86,34 @@ new p5(p => {
     debugControls.appendChild(resetButton);
 
     document.body.appendChild(debugControls);
+
+    // Add hop button listeners
+    document.getElementById('leftBtn')!
+      .addEventListener('click', () => {
+        if (p.millis() - hopStart >= hopDur) startHop(-1);
+      });
+    document.getElementById('rightBtn')!
+      .addEventListener('click', () => {
+        if (p.millis() - hopStart >= hopDur) startHop(1);
+      });
+    document.getElementById('hopSelect')!
+      .addEventListener('change', e => {
+        hopSize = +(e.target as HTMLSelectElement).value;
+      });
+
+    // Add keyboard controls
+    window.addEventListener('keydown', e => {
+      if (p.millis() - hopStart < hopDur) return;
+      if (e.key === 'ArrowRight' || e.key === 'd') startHop(1);
+      if (e.key === 'ArrowLeft' || e.key === 'a') startHop(-1);
+    });
   };
 
   p.draw = () => {
     const t = p.millis();
 
     // --- Animate frog position ---
-    let alpha = p.constrain((t - hopStart) / HOP_DUR, 0, 1);
+    const alpha = p.constrain((t - hopStart) / hopDur, 0, 1);
     const frogXw = p.lerp(fromIdx, toIdx, alpha) * gap;
     const frogY = canvas.h / 2 - 20 * p.sin(alpha * Math.PI);
 
