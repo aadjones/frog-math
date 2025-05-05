@@ -1,9 +1,10 @@
 /// <reference types="p5/global" />
 import p5 from 'p5';
-import { MS_PER_PAD, hopDuration, playbackRate, nextIndex } from '../frogPhysics';
-
-const gap = 60;
-const canvas = { w: 600, h: 160 };
+import { gap, canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, worldX, debugMode, toggleDebug } from './shared';
+import { MS_PER_PAD, hopDuration, nextIndex, frogYArc } from '../frogPhysics';
+import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
+import { animateFrogReset, animateFrogIntro } from './shared';
+import '../ui/sharedStyle.css';
 
 const HOP_RANGE = [0,1,2,3,4,5,6,7,8,9,10];   // change range if you like
 
@@ -13,49 +14,12 @@ let hopStart = 0;
 let fromIdx = 0;
 let toIdx = 0;
 let hopDur = MS_PER_PAD;  // Will be calculated based on distance
-let debugMode = true;  // Show numbers by default
-let audioCtx: AudioContext;
-let samples: HTMLAudioElement[] = [];
 
-const worldX = (idx: number) => idx * gap;
-
-export function mountSingle(container: HTMLElement) {
-  // Add Back to Menu button in its own div at the top
-  const navDiv = document.createElement('div');
-  navDiv.style.margin = '16px 0 8px 12px';
-  const backBtn = document.createElement('button');
-  backBtn.textContent = '← Back to Menu';
-  backBtn.style.fontSize = '16px';
-  navDiv.appendChild(backBtn);
-  container.appendChild(navDiv);
-  backBtn.addEventListener('click', async () => {
-    container.innerHTML = '';
-    const { mountMenu } = await import('./menu');
-    mountMenu(container, async mode => {
-      container.innerHTML = '';
-      if (mode === 'single') {
-        const { mountSingle } = await import('./single');
-        mountSingle(container);
-      } else {
-        const { mountMulti } = await import('./multi');
-        mountMulti(container);
-      }
-    });
-  });
-
+export function mountSingle(root: HTMLElement) {
+  root.innerHTML = '';
+  addBackToMenu(root);
   new p5(p => {
-    function playHopSound() {
-      const src = samples[Math.floor(Math.random() * samples.length)];
-      const clip = src.cloneNode() as HTMLAudioElement;
-
-      // compute playbackRate so that clipDuration / rate === hopSec
-      const rate = playbackRate(hopDur);
-      clip.playbackRate = p.constrain(rate, 0.5, 2.0);   // clamp if you like
-
-      clip.volume = 0.7;
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      clip.play().catch(() => {});
-    }
+    let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
     function startHop(direction: 1 | -1) {
       const targetIdx = hopSize === 0 ? frogIdx : nextIndex(frogIdx, hopSize, direction);
@@ -65,19 +29,16 @@ export function mountSingle(container: HTMLElement) {
       toIdx = targetIdx;
       frogIdx = targetIdx;
       hopStart = p.millis();
-      playHopSound();
+      playHopSound(hopDur);
     }
 
-    function toggleDebug() {
-      debugMode = !debugMode;
-    }
-
-    function resetFrog() {
-      fromIdx = frogIdx;
-      toIdx = 0;
-      frogIdx = 0;
-      hopStart = p.millis();
-    }
+    function setFrogIdx(n: number) { frogIdx = n; }
+    function setFromIdx(n: number) { fromIdx = n; }
+    function setToIdx(n: number) { toIdx = n; }
+    function setHopStart(n: number) { hopStart = n; }
+    function setHopDur(n: number) { hopDur = n; }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    function setAnimating(_b: boolean) { /* not used in single, but required for shared */ }
 
     p.setup = () => {
       // Create UI elements first
@@ -88,7 +49,6 @@ export function mountSingle(container: HTMLElement) {
         <button id="leftBtn">← Hop Left</button>
         <button id="rightBtn">Hop Right →</button>
       `;
-      container.appendChild(ui);
 
       // Add styles
       const style = document.createElement('style');
@@ -113,10 +73,9 @@ export function mountSingle(container: HTMLElement) {
         }
         canvas { display: block; margin-top: 16px; }  /* keeps pond below UI */
       `;
-      container.appendChild(style);
 
       // Now create canvas
-      p.createCanvas(canvas.w, canvas.h).parent(container);
+      const canvasElem = p.createCanvas(canvas.w, canvas.h).elt;
       p.textSize(24);
 
       // Place belowSketch after the canvas
@@ -126,33 +85,44 @@ export function mountSingle(container: HTMLElement) {
         <button id="toggleDebugBtn">Toggle Labels</button>
         <button id="resetFrogBtn">Reset Frog</button>
       `;
-      container.appendChild(belowSketch);
 
-      // Initialize audio context
-      audioCtx = new AudioContext();
-      
-      // Load sound sample
-      const hopSound = new Audio('/sounds/frog-math-hop.mp3');
-      hopSound.preload = 'auto';
-      samples = [hopSound];
+      // Center all UI elements
+      const container = document.createElement('div');
+      container.appendChild(ui);
+      container.appendChild(style);
+      container.appendChild(canvasElem);
+      container.appendChild(belowSketch);
+      root.appendChild(createInstructionBanner('Meet the hoppers! 🐸'));
+      root.appendChild(wrapCenteredContent(container));
 
       // Add hop button listeners
-      container.querySelector('#leftBtn')!
+      root.querySelector('#leftBtn')!
         .addEventListener('click', () => {
           if (p.millis() - hopStart >= hopDur) startHop(-1);
         });
-      container.querySelector('#rightBtn')!
+      root.querySelector('#rightBtn')!
         .addEventListener('click', () => {
           if (p.millis() - hopStart >= hopDur) startHop(1);
         });
 
-      // Add debug and reset button listeners to #ui buttons
-      container.querySelector('#toggleDebugBtn')!
+      // Add debug and reset button listeners
+      root.querySelector('#toggleDebugBtn')!
         .addEventListener('click', toggleDebug);
-      container.querySelector('#resetFrogBtn')!
-        .addEventListener('click', resetFrog);
+      root.querySelector('#resetFrogBtn')!
+        .addEventListener('click', () => {
+          animateFrogReset(
+            frogIdx,
+            setFrogIdx,
+            setFromIdx,
+            setToIdx,
+            setHopStart,
+            setHopDur,
+            setAnimating,
+            () => p.millis()
+          );
+        });
 
-      const hopSel = container.querySelector('#hopSelect') as HTMLSelectElement;
+      const hopSel = root.querySelector('#hopSelect') as HTMLSelectElement;
 
       // generate options once
       HOP_RANGE.forEach(n => {
@@ -170,11 +140,36 @@ export function mountSingle(container: HTMLElement) {
       });
 
       // Add keyboard controls
-      window.addEventListener('keydown', e => {
-        if (p.millis() - hopStart < hopDur) return;
-        if (e.key === 'ArrowRight' || e.key === 'd') startHop(1);
-        if (e.key === 'ArrowLeft' || e.key === 'a') startHop(-1);
+      if (shouldEnableArrowKeys('single')) {
+        keydownHandler = (e: KeyboardEvent) => {
+          if (p.millis() - hopStart < hopDur) return;
+          if (e.key === 'ArrowRight' || e.key === 'd') startHop(1);
+          if (e.key === 'ArrowLeft' || e.key === 'a') startHop(-1);
+        };
+        window.addEventListener('keydown', keydownHandler);
+      }
+
+      // Animate frog intro from 0 to 0 (no sound)
+      animateFrogIntro(
+        0, // fromIdx
+        0, // toIdx
+        setFrogIdx,
+        setFromIdx,
+        setToIdx,
+        setHopStart,
+        setHopDur,
+        setAnimating,
+        () => p.millis()
+      );
+
+      // Clean up event listener when unmounting
+      const observer = new MutationObserver(() => {
+        if (!root.contains(ui)) {
+          if (keydownHandler) window.removeEventListener('keydown', keydownHandler);
+          observer.disconnect();
+        }
       });
+      observer.observe(root, { childList: true });
     };
 
     p.draw = () => {
@@ -183,7 +178,7 @@ export function mountSingle(container: HTMLElement) {
       // --- Animate frog position ---
       const alpha = p.constrain((t - hopStart) / hopDur, 0, 1);
       const frogXw = p.lerp(fromIdx, toIdx, alpha) * gap;
-      const frogY = canvas.h / 2 - 20 * p.sin(alpha * Math.PI);
+      const frogY = frogYArc(alpha, canvas.h / 2, 20);
 
       // --- Camera follows frog ---
       const camX = frogXw - canvas.w / 2;
@@ -193,13 +188,14 @@ export function mountSingle(container: HTMLElement) {
       // --- Draw lily pads within ±10 of frog, always show at least -10 to ... ---
       const start = Math.min(-10, frogIdx - 10);
       const end = frogIdx + 10;
+      const showAvailable = shouldDisplayAvailablePads('single');
       for (let i = start; i <= end; i++) {
         // Skip the current pad - we'll draw it last
         if (i === frogIdx) continue;
         
         const screenX = worldX(i) - camX;
         const reachable = ((i - frogIdx) % hopSize + hopSize) % hopSize === 0;
-        p.fill(reachable ? '#8f8' : '#ddd');
+        p.fill(showAvailable && reachable ? '#8f8' : '#ddd');
         p.circle(screenX, canvas.h / 2, 24);
 
         // Draw debug labels if enabled
@@ -238,7 +234,7 @@ export function mountSingle(container: HTMLElement) {
       p.fill(0);
       p.text(hopSize.toString(), frogXw - camX, frogY - 36);
     };
-  });
+  }, root);
 }
 
 export const setHopSize = (n: number) => { hopSize = n; }; 
