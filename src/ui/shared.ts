@@ -66,10 +66,10 @@ export function animateFrogIntro(
 
 /* Audio */
 const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-const samples = [new Audio('/sounds/frog-math-hop.mp3')];
+const samples = [new Audio(`${import.meta.env.BASE_URL}sounds/frog-math-hop.mp3`)];
 samples.forEach(a => (a.preload = 'auto'));
 
-const victorySample = new Audio('/sounds/frog-victory.mp3');
+const victorySample = new Audio(`${import.meta.env.BASE_URL}sounds/frog-victory.mp3`);
 victorySample.preload = 'auto';
 
 export function playHopSound(hopDur: number) {
