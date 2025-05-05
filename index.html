@@ -7,9 +7,24 @@
     <title>Vite + TS</title>
   </head>
   <body>
-    <select id="hopSelect" style="margin: 16px 0 8px 30px; font-size: 1.1em;">
-      <option>2</option><option selected>3</option><option>4</option>
-    </select>
+    <div id="ui">
+      <select id="hopSelect">
+        <option>0</option>
+        <option>1</option>
+        <option>2</option>
+        <option selected>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+        <option>9</option>
+        <option>10</option>
+      </select>
+
+      <button id="leftBtn">← Hop Left</button>
+      <button id="rightBtn">Hop Right →</button>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/sketch.ts"></script>
     <script type="module">
@@ -18,5 +33,11 @@
         setHopSize(+e.target.value);
       });
     </script>
+
+    <style>
+      #ui { position: fixed; top: 12px; left: 12px; z-index: 10; display: flex; gap: 8px; }
+      #ui button { padding: 6px 12px; font-size: 16px; }
+      canvas { display: block; margin-top: 60px; }  /* keeps pond below UI */
+    </style>
   </body>
 </html>
