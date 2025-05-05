@@ -1,51 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
-  </head>
-  <body>
-    <div id="ui">
-      <select id="hopSelect"></select>
-      <button id="leftBtn">← Hop Left</button>
-      <button id="rightBtn">Hop Right →</button>
-    </div>
-    <div id="app"></div>
-    <div id="belowSketch">
-      <button id="toggleDebugBtn">Toggle Numbers</button>
-      <button id="resetFrogBtn">Reset Frog</button>
-    </div>
-    <script type="module" src="/src/sketch.ts"></script>
-    <script type="module">
-      import { setHopSize } from '/src/sketch.ts';
-      document.getElementById('hopSelect').addEventListener('change', e => {
-        setHopSize(+e.target.value);
-      });
-    </script>
-
-    <style>
-      #ui { position: fixed; top: 12px; left: 12px; z-index: 10; display: flex; gap: 8px; }
-      #ui button { padding: 6px 12px; font-size: 16px; }
-      #hopSelect { 
-        width: 100px;
-        padding: 6px;
-        font-size: 16px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-      }
-      #belowSketch {
-        margin-top: 24px;
-        margin-left: 12px;
-        display: flex;
-        gap: 8px;
-      }
-      #belowSketch button {
-        padding: 6px 12px;
-        font-size: 16px;
-      }
-      canvas { display: block; margin-top: 60px; }  /* keeps pond below UI */
-    </style>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frog Math</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
 </html>
