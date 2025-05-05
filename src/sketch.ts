@@ -5,6 +5,8 @@ import { MS_PER_PAD, hopDuration, playbackRate, nextIndex } from './frogPhysics'
 const gap = 60;
 const canvas = { w: 600, h: 160 };
 
+const HOP_RANGE = [0,1,2,3,4,5,6,7,8,9,10];   // change range if you like
+
 let frogIdx = 0;
 let hopSize = 3;
 let hopStart = 0;
@@ -54,7 +56,7 @@ new p5(p => {
   }
 
   p.setup = () => {
-    p.createCanvas(canvas.w, canvas.h);
+    p.createCanvas(canvas.w, canvas.h).parent('app');
     p.textSize(24);
 
     // Initialize audio context
@@ -65,28 +67,6 @@ new p5(p => {
     hopSound.preload = 'auto';
     samples = [hopSound];
 
-    // Create debug controls container
-    const debugControls = document.createElement('div');
-    debugControls.style.position = 'absolute';
-    debugControls.style.top = '10px';
-    debugControls.style.right = '10px';
-    debugControls.style.display = 'flex';
-    debugControls.style.gap = '10px';
-
-    // Create debug toggle button
-    const debugButton = document.createElement('button');
-    debugButton.textContent = 'Toggle Numbers';
-    debugButton.addEventListener('click', toggleDebug);
-    debugControls.appendChild(debugButton);
-
-    // Create reset button
-    const resetButton = document.createElement('button');
-    resetButton.textContent = 'Reset Frog';
-    resetButton.addEventListener('click', resetFrog);
-    debugControls.appendChild(resetButton);
-
-    document.body.appendChild(debugControls);
-
     // Add hop button listeners
     document.getElementById('leftBtn')!
       .addEventListener('click', () => {
@@ -96,10 +76,29 @@ new p5(p => {
       .addEventListener('click', () => {
         if (p.millis() - hopStart >= hopDur) startHop(1);
       });
-    document.getElementById('hopSelect')!
-      .addEventListener('change', e => {
-        hopSize = +(e.target as HTMLSelectElement).value;
-      });
+
+    // Add debug and reset button listeners to #ui buttons
+    document.getElementById('toggleDebugBtn')!
+      .addEventListener('click', toggleDebug);
+    document.getElementById('resetFrogBtn')!
+      .addEventListener('click', resetFrog);
+
+    const hopSel = document.getElementById('hopSelect') as HTMLSelectElement;
+
+    // generate options once
+    HOP_RANGE.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n.toString();        // numeric value for code
+      opt.textContent = `${n}-hopper`; // user‑facing label
+      hopSel.appendChild(opt);
+    });
+
+    // set initial selection to current hopSize
+    hopSel.value = hopSize.toString();
+
+    hopSel.addEventListener('change', e => {
+      hopSize = +(e.target as HTMLSelectElement).value;   // value still numeric
+    });
 
     // Add keyboard controls
     window.addEventListener('keydown', e => {
@@ -159,8 +158,16 @@ new p5(p => {
     }
 
     // --- Draw frog emoji ---
+    p.textSize(32);
     p.textAlign(p.CENTER, p.CENTER);
     p.text('🐸', frogXw - camX, frogY - 12);
+
+    // ---- badge ----
+    p.textSize(14);
+    p.fill(255);
+    p.circle(frogXw - camX, frogY - 36, 20);
+    p.fill(0);
+    p.text(hopSize.toString(), frogXw - camX, frogY - 36);
   };
 });
 
