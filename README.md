@@ -9,7 +9,7 @@ Tiny browser playground for teaching number theory with hopping frogs.
 
 ## Getting Started
 
-Go to `https://aadjones.github.io/frog-math/` and check it out!
+Go to [https://aadjones.github.io/frog-math/] and check it out!
 
 ## Development
 
