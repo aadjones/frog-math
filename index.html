@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+  </head>
+  <body>
+    <select id="hopSelect" style="margin: 16px 0 8px 30px; font-size: 1.1em;">
+      <option>2</option><option selected>3</option><option>4</option>
+    </select>
+    <div id="app"></div>
+    <script type="module" src="/src/sketch.ts"></script>
+    <script type="module">
+      import { setHopSize } from '/src/sketch.ts';
+      document.getElementById('hopSelect').addEventListener('change', e => {
+        setHopSize(+e.target.value);
+      });
+    </script>
+  </body>
+</html>
