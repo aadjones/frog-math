@@ -1,9 +1,10 @@
 /// <reference types="p5/global" />
 import p5 from 'p5';
-import { gap, canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, worldX, debugMode, toggleDebug, FEATURES } from './shared';
-import { MS_PER_PAD, hopDuration, nextIndex, frogYArc } from '../frogPhysics';
+import { canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, debugMode, toggleDebug, FEATURES } from './shared';
+import { MS_PER_PAD, hopDuration, nextIndex } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { resetFrog, animateFrogIntro } from './shared';
+import { drawAnimationFrame } from './animation';
 import '../ui/sharedStyle.css';
 
 const HOP_RANGE = [0,1,2,3,4,5,6,7,8,9,10];   // change range if you like
@@ -213,66 +214,26 @@ export function mountSingle(root: HTMLElement) {
     };
 
     p.draw = () => {
-      const t = p.millis();
-
-      // --- Animate frog position ---
-      const alpha = p.constrain((t - hopStart) / hopDur, 0, 1);
-      const frogXw = p.lerp(fromIdx, toIdx, alpha) * gap;
-      const frogY = frogYArc(alpha, canvas.h / 2, 20);
-
-      // --- Camera follows frog ---
-      const camX = frogXw - canvas.w / 2;
-
-      p.background(255);
-
-      // --- Draw lily pads within ±10 of frog, always show at least -10 to ... ---
-      const start = Math.min(-10, frogIdx - 10);
-      const end = frogIdx + 10;
-      const showAvailable = shouldDisplayAvailablePads('single');
-      for (let i = start; i <= end; i++) {
-        // Skip the current pad - we'll draw it last
-        if (i === frogIdx) continue;
-        
-        const screenX = worldX(i) - camX;
-        const reachable = ((i - frogIdx) % hopSize + hopSize) % hopSize === 0;
-        p.fill(showAvailable && reachable ? '#8f8' : '#ddd');
-        p.circle(screenX, canvas.h / 2, 24);
-
-        // Draw debug labels if enabled
-        if (debugMode) {
+      drawAnimationFrame({
+        p,
+        state: {
+          frogIdx,
+          fromIdx,
+          toIdx,
+          hopStart,
+          hopDur
+        },
+        showAvailable: shouldDisplayAvailablePads('single'),
+        isReachable: (idx) => ((idx - frogIdx) % hopSize + hopSize) % hopSize === 0,
+        showBadge: (frogXw, frogY, camX) => {
+          p.textSize(14);
+          p.fill(255);
+          p.circle(frogXw - camX, frogY - 36, 20);
           p.fill(0);
-          p.textSize(12);
-          p.textAlign(p.CENTER, p.TOP);
-          p.text(i.toString(), screenX, canvas.h / 2 + 30);
-          p.textSize(24); // Reset text size
-        }
-      }
-
-      // Draw current pad last with darker green
-      const currentPadX = worldX(frogIdx) - camX;
-      p.fill('#4a4');
-      p.circle(currentPadX, canvas.h / 2, 24);
-
-      // Draw debug label for current pad if enabled
-      if (debugMode) {
-        p.fill(0);
-        p.textSize(12);
-        p.textAlign(p.CENTER, p.TOP);
-        p.text(frogIdx.toString(), currentPadX, canvas.h / 2 + 30);
-        p.textSize(24); // Reset text size
-      }
-
-      // --- Draw frog emoji ---
-      p.textSize(32);
-      p.textAlign(p.CENTER, p.CENTER);
-      p.text('🐸', frogXw - camX, frogY - 12);
-
-      // ---- badge ----
-      p.textSize(14);
-      p.fill(255);
-      p.circle(frogXw - camX, frogY - 36, 20);
-      p.fill(0);
-      p.text(hopSize.toString(), frogXw - camX, frogY - 36);
+          p.text(hopSize.toString(), frogXw - camX, frogY - 36);
+        },
+        debugMode
+      });
     };
   }, root);
 }
