@@ -1,6 +1,6 @@
 /// <reference types="p5/global" />
 import p5 from 'p5';
-import { gap, canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, worldX, debugMode, toggleDebug } from './shared';
+import { gap, canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, worldX, debugMode, toggleDebug, FEATURES } from './shared';
 import { MS_PER_PAD, hopDuration, nextIndex, frogYArc } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { animateFrogReset, animateFrogIntro } from './shared';
@@ -45,19 +45,47 @@ export function mountSingle(root: HTMLElement) {
       const ui = document.createElement('div');
       ui.id = 'ui';
       ui.innerHTML = `
-        <select id="hopSelect"></select>
-        <button id="leftBtn">← Hop Left</button>
-        <button id="rightBtn">Hop Right →</button>
+        <div class="hop-controls">
+          <select id="hopSelect"></select>
+          <div class="hop-buttons">
+            <button id="leftBtn">← Hop Left</button>
+            <button id="rightBtn">Hop Right →</button>
+          </div>
+        </div>
       `;
 
       // Add styles
       const style = document.createElement('style');
       style.textContent = `
-        #ui { display: flex; gap: 8px; margin-left: 12px; margin-bottom: 8px; }
-        #ui button { padding: 6px 12px; font-size: 16px; min-width: 120px; }
+        #ui { 
+          display: flex; 
+          margin: 0 auto 8px auto;
+          width: 100%;
+          padding: 0 10px;
+        }
+        .hop-controls {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          width: 100%;
+          align-items: center;
+        }
+        .hop-buttons {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          width: 100%;
+        }
+        #ui button { 
+          padding: 8px 16px; 
+          font-size: 16px; 
+          min-width: 120px;
+          max-width: 160px;
+        }
         #hopSelect { 
-          width: 140px;
-          padding: 6px;
+          width: 100%;
+          max-width: 200px;
+          padding: 8px;
           font-size: 16px;
           border-radius: 4px;
           border: 1px solid #ccc;
@@ -66,12 +94,22 @@ export function mountSingle(root: HTMLElement) {
           display: flex;
           gap: 8px;
           margin-top: 16px;
+          flex-wrap: wrap;
+          justify-content: center;
+          width: 100%;
+          padding: 0 10px;
         }
         #belowSketch button {
-          padding: 6px 12px;
+          padding: 8px 16px;
           font-size: 16px;
+          flex: 1;
+          max-width: 160px;
         }
-        canvas { display: block; margin-top: 16px; }  /* keeps pond below UI */
+        canvas { 
+          display: block; 
+          margin: 16px auto 0 auto;
+          max-width: 100%;
+        }
       `;
 
       // Now create canvas
@@ -82,7 +120,7 @@ export function mountSingle(root: HTMLElement) {
       const belowSketch = document.createElement('div');
       belowSketch.id = 'belowSketch';
       belowSketch.innerHTML = `
-        <button id="toggleDebugBtn">Toggle Labels</button>
+        ${FEATURES.showToggleLabelsButton ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
         <button id="resetFrogBtn">Reset Frog</button>
       `;
 
@@ -106,8 +144,10 @@ export function mountSingle(root: HTMLElement) {
         });
 
       // Add debug and reset button listeners
-      root.querySelector('#toggleDebugBtn')!
-        .addEventListener('click', toggleDebug);
+      if (FEATURES.showToggleLabelsButton) {
+        root.querySelector('#toggleDebugBtn')!
+          .addEventListener('click', toggleDebug);
+      }
       root.querySelector('#resetFrogBtn')!
         .addEventListener('click', () => {
           animateFrogReset(

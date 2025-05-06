@@ -1,3 +1,4 @@
+import './styles/main.scss';
 import { mountMenu } from './ui/menu';
 
 const root = document.getElementById('app')!;   // add <div id="app"></div> in index.html

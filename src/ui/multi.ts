@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { gap, canvas, playHopSound, worldX, debugMode, toggleDebug, animateFrogReset, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound } from './shared';
+import { gap, canvas, playHopSound, worldX, debugMode, toggleDebug, animateFrogReset, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, FEATURES } from './shared';
 import { frogYArc, MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import '../ui/sharedStyle.css';
@@ -14,18 +14,66 @@ export function mountMulti(root: HTMLElement) {
   // Create a wrapper for the rest of the UI
   const wrapper = document.createElement('div');
   wrapper.innerHTML = `
-    <div id="toolbar" style="display:flex;gap:8px;margin-bottom:8px;">
-      <button id="left5">← 5</button>
-      <button id="left7">← 7</button>
-      <button id="right5">5 →</button>
-      <button id="right7">7 →</button>
+    <div id="toolbar">
+      <div class="hop-buttons">
+        <button id="left5">← 5</button>
+        <button id="left7">← 7</button>
+        <button id="right5">5 →</button>
+        <button id="right7">7 →</button>
+      </div>
     </div>
     <div id="pond"></div>
-    <div id="belowSketch" style="display:flex;gap:8px;margin-top:16px;">
-      <button id="toggleDebugBtn">Toggle Labels</button>
+    <div id="belowSketch">
+      ${FEATURES.showToggleLabelsButton ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
       <button id="resetFrogBtn">Reset Frog</button>
     </div>
   `;
+
+  // Add styles
+  const style = document.createElement('style');
+  style.textContent = `
+    #toolbar {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      padding: 0 10px;
+      margin-bottom: 8px;
+    }
+    .hop-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      max-width: 320px;
+    }
+    #toolbar button {
+      padding: 6px 12px;
+      font-size: 14px;
+      min-width: 60px;
+      white-space: nowrap;
+    }
+    #belowSketch {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      padding: 0 10px;
+    }
+    #belowSketch button {
+      padding: 8px 16px;
+      font-size: 16px;
+      flex: 1;
+      max-width: 160px;
+    }
+    canvas { 
+      display: block; 
+      margin: 16px auto 0 auto;
+      max-width: 100%;
+    }
+  `;
+  wrapper.appendChild(style);
+
   root.appendChild(wrapCenteredContent(wrapper));
 
   const pond = wrapper.querySelector('#pond') as HTMLElement;
@@ -147,7 +195,7 @@ export function mountMulti(root: HTMLElement) {
   wrapper.querySelector('#right5')!.addEventListener('click',()=>startHop(5));
   wrapper.querySelector('#right7')!.addEventListener('click',()=>startHop(7));
 
-  wrapper.querySelector('#toggleDebugBtn')!.addEventListener('click', () => toggleDebug());
+  wrapper.querySelector('#toggleDebugBtn')?.addEventListener('click', () => toggleDebug());
   wrapper.querySelector('#resetFrogBtn')!.addEventListener('click', () => {
     if (animating) return;
     animateFrogReset(
