@@ -31,6 +31,9 @@ export function wrapCenteredContent(content: HTMLElement) {
   wrapper.style.justifyContent = 'center';
   wrapper.style.margin = '0 auto';
   wrapper.style.maxWidth = '700px';
+  wrapper.style.width = '100%';
+  wrapper.style.overflow = 'hidden';
+  wrapper.style.padding = '20px';
   wrapper.appendChild(content);
   return wrapper;
 }

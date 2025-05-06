@@ -2,14 +2,28 @@ import { MS_PER_PAD, playbackRate } from '../frogPhysics';
 
 /* shared constants & helpers for all frog modes */
 export const gap = 60;
-export const canvas = { w: 600, h: 160 };
+
+// Get responsive canvas width based on screen size
+function getResponsiveCanvasWidth() {
+  return Math.min(600, window.innerWidth - 40); // 40px for padding
+}
+
+export const canvas = {
+  get w() { return getResponsiveCanvasWidth(); },
+  h: 160
+};
 
 /* World helpers */
 export const worldX = (idx: number) => idx * gap;
 
 /* Debug state (shared) */
-export let debugMode = true;
+export let debugMode = true; // Show numbers by default
 export function toggleDebug() { debugMode = !debugMode; }
+
+/* Feature flags */
+export const FEATURES = {
+  showToggleLabelsButton: false // Hide toggle button by default
+};
 
 /* Frog reset helper (shared, instant) */
 export function resetFrog(
