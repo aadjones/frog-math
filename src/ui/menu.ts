@@ -1,4 +1,4 @@
-export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'multi')=>void){
+export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'multi'|'pond')=>void){
   container.innerHTML = '';
 
   // Main wrapper
@@ -49,6 +49,17 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   `;
   cards.appendChild(multiCard);
 
+  // Pond card
+  const pondCard = document.createElement('button');
+  pondCard.className = 'menu-card menu-card--pond';
+  pondCard.id = 'pondBtn';
+  pondCard.innerHTML = `
+    <div class="menu-card-icon">⭕</div>
+    <div class="menu-card-title">Pond</div>
+    <div class="menu-card-subtitle">Hop around the circle</div>
+  `;
+  cards.appendChild(pondCard);
+
   wrapper.appendChild(cards);
 
   // Customer review / quote
@@ -66,4 +77,5 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   // Wire up the buttons
   singleCard.addEventListener('click', () => onSelect('single'));
   multiCard.addEventListener('click', () => onSelect('multi'));
+  pondCard.addEventListener('click', () => onSelect('pond'));
 } 

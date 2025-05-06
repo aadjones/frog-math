@@ -7,8 +7,11 @@ mountMenu(root, async mode => {
   if (mode === 'single') {
     const { mountSingle } = await import('./ui/single');
     mountSingle(root);
-  } else {
+  } else if (mode === 'multi') {
     const { mountMulti } = await import('./ui/multi');
     mountMulti(root);
+  } else {
+    const { mountPond } = await import('./ui/pond');
+    mountPond(root);
   }
 }); 
