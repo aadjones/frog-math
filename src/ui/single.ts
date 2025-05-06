@@ -15,6 +15,7 @@ let hopStart = 0;
 let fromIdx = 0;
 let toIdx = 0;
 let hopDur = MS_PER_PAD;  // Will be calculated based on distance
+let animating = false;
 
 export function mountSingle(root: HTMLElement) {
   root.innerHTML = '';
@@ -22,7 +23,15 @@ export function mountSingle(root: HTMLElement) {
   new p5(p => {
     let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
+    function setFrogIdx(n: number) { frogIdx = n; }
+    function setFromIdx(n: number) { fromIdx = n; }
+    function setToIdx(n: number) { toIdx = n; }
+    function setHopStart(n: number) { hopStart = n; }
+    function setHopDur(n: number) { hopDur = n; }
+    function setAnimating(b: boolean) { animating = b; }
+
     function startHop(direction: 1 | -1) {
+      if (animating) return;
       const targetIdx = hopSize === 0 ? frogIdx : nextIndex(frogIdx, hopSize, direction);
       const padsTravelled = Math.abs(targetIdx - frogIdx);
       hopDur = hopDuration(padsTravelled);
@@ -30,14 +39,9 @@ export function mountSingle(root: HTMLElement) {
       toIdx = targetIdx;
       frogIdx = targetIdx;
       hopStart = p.millis();
+      animating = true;
       playHopSound(hopDur);
     }
-
-    function setFrogIdx(n: number) { frogIdx = n; }
-    function setFromIdx(n: number) { fromIdx = n; }
-    function setToIdx(n: number) { toIdx = n; }
-    function setHopStart(n: number) { hopStart = n; }
-    function setHopDur(n: number) { hopDur = n; }
 
     p.setup = () => {
       // Create UI elements first
@@ -149,6 +153,7 @@ export function mountSingle(root: HTMLElement) {
       }
       root.querySelector('#resetFrogBtn')!
         .addEventListener('click', () => {
+          if (animating) return;
           resetFrog(
             frogIdx,
             setFrogIdx,
@@ -156,7 +161,7 @@ export function mountSingle(root: HTMLElement) {
             setToIdx,
             setHopStart,
             setHopDur,
-            undefined,
+            setAnimating,
             () => p.millis()
           );
         });
@@ -217,7 +222,7 @@ export function mountSingle(root: HTMLElement) {
         setHopStart,
         setHopDur,
         () => p.millis(),
-        undefined // No animation state in single mode
+        setAnimating
       );
 
       // Clean up event listener when unmounting
@@ -238,8 +243,9 @@ export function mountSingle(root: HTMLElement) {
           fromIdx,
           toIdx,
           hopStart,
-          hopDur
-          // No animation state in single mode
+          hopDur,
+          animating,
+          setAnimating
         },
         showAvailable: shouldDisplayAvailablePads('single'),
         isReachable: (idx) => ((idx - frogIdx) % hopSize + hopSize) % hopSize === 0,
