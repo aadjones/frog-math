@@ -3,7 +3,7 @@ import p5 from 'p5';
 import { gap, canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, worldX, debugMode, toggleDebug, FEATURES } from './shared';
 import { MS_PER_PAD, hopDuration, nextIndex, frogYArc } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
-import { animateFrogReset, animateFrogIntro } from './shared';
+import { resetFrog, animateFrogIntro } from './shared';
 import '../ui/sharedStyle.css';
 
 const HOP_RANGE = [0,1,2,3,4,5,6,7,8,9,10];   // change range if you like
@@ -150,7 +150,7 @@ export function mountSingle(root: HTMLElement) {
       }
       root.querySelector('#resetFrogBtn')!
         .addEventListener('click', () => {
-          animateFrogReset(
+          resetFrog(
             frogIdx,
             setFrogIdx,
             setFromIdx,

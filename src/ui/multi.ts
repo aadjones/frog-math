@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { gap, canvas, playHopSound, worldX, debugMode, toggleDebug, animateFrogReset, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, FEATURES } from './shared';
+import { gap, canvas, playHopSound, worldX, debugMode, toggleDebug, resetFrog, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, FEATURES } from './shared';
 import { frogYArc, MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import '../ui/sharedStyle.css';
@@ -198,7 +198,7 @@ export function mountMulti(root: HTMLElement) {
   wrapper.querySelector('#toggleDebugBtn')?.addEventListener('click', () => toggleDebug());
   wrapper.querySelector('#resetFrogBtn')!.addEventListener('click', () => {
     if (animating) return;
-    animateFrogReset(
+    resetFrog(
       frogIdx,
       setFrogIdx,
       setFromIdx,

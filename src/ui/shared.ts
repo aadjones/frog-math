@@ -25,37 +25,30 @@ export const FEATURES = {
   showToggleLabelsButton: false // Hide toggle button by default
 };
 
-/* Frog reset helper (shared, instant) */
+/* Frog reset helper (unified) */
 export function resetFrog(
   frogIdx: number,
   setFrogIdx: (n: number) => void,
   setFromIdx: (n: number) => void,
   setToIdx: (n: number) => void,
-  setHopStart: (n: number) => void
-) {
-  setFromIdx(frogIdx);
-  setToIdx(0);
-  setFrogIdx(0);
-  setHopStart(performance.now());
-}
-
-/* Frog reset with animation (no sound) */
-export function animateFrogReset(
-  frogIdx: number,
-  setFrogIdx: (n: number) => void,
-  setFromIdx: (n: number) => void,
-  setToIdx: (n: number) => void,
   setHopStart: (n: number) => void,
-  setHopDur: (n: number) => void,
-  setAnimating: (b: boolean) => void,
-  sketchMillis: () => number
+  setHopDur?: (n: number) => void,
+  setAnimating?: (b: boolean) => void,
+  sketchMillis?: () => number
 ) {
   setFromIdx(frogIdx);
   setToIdx(0);
-  setHopDur(MS_PER_PAD * Math.max(1, Math.abs(frogIdx)));
-  setHopStart(sketchMillis());
   setFrogIdx(0);
-  setAnimating(true);
+  
+  // Handle animation if animation parameters are provided
+  if (setHopDur && setAnimating && sketchMillis) {
+    setHopDur(MS_PER_PAD * Math.max(1, Math.abs(frogIdx)));
+    setHopStart(sketchMillis());
+    setAnimating(true);
+  } else {
+    // Instant reset
+    setHopStart(performance.now());
+  }
 }
 
 /* Frog intro animation (no sound) */
