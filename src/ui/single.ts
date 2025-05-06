@@ -1,9 +1,10 @@
 /// <reference types="p5/global" />
 import p5 from 'p5';
-import { gap, canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, worldX, debugMode, toggleDebug, FEATURES } from './shared';
-import { MS_PER_PAD, hopDuration, nextIndex, frogYArc } from '../frogPhysics';
+import { canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, debugMode, toggleDebug, getFeatureFlag } from './shared';
+import { MS_PER_PAD, hopDuration, nextIndex } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
-import { animateFrogReset, animateFrogIntro } from './shared';
+import { resetFrog, animateFrogIntro } from './shared';
+import { drawAnimationFrame } from './animation';
 import '../ui/sharedStyle.css';
 
 const HOP_RANGE = [0,1,2,3,4,5,6,7,8,9,10];   // change range if you like
@@ -37,8 +38,6 @@ export function mountSingle(root: HTMLElement) {
     function setToIdx(n: number) { toIdx = n; }
     function setHopStart(n: number) { hopStart = n; }
     function setHopDur(n: number) { hopDur = n; }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    function setAnimating(_b: boolean) { /* not used in single, but required for shared */ }
 
     p.setup = () => {
       // Create UI elements first
@@ -120,7 +119,7 @@ export function mountSingle(root: HTMLElement) {
       const belowSketch = document.createElement('div');
       belowSketch.id = 'belowSketch';
       belowSketch.innerHTML = `
-        ${FEATURES.showToggleLabelsButton ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
+        ${getFeatureFlag('showToggleLabelsButton') ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
         <button id="resetFrogBtn">Reset Frog</button>
       `;
 
@@ -144,25 +143,32 @@ export function mountSingle(root: HTMLElement) {
         });
 
       // Add debug and reset button listeners
-      if (FEATURES.showToggleLabelsButton) {
+      if (getFeatureFlag('showToggleLabelsButton')) {
         root.querySelector('#toggleDebugBtn')!
           .addEventListener('click', toggleDebug);
       }
       root.querySelector('#resetFrogBtn')!
         .addEventListener('click', () => {
-          animateFrogReset(
+          resetFrog(
             frogIdx,
             setFrogIdx,
             setFromIdx,
             setToIdx,
             setHopStart,
             setHopDur,
-            setAnimating,
+            undefined,
             () => p.millis()
           );
         });
 
       const hopSel = root.querySelector('#hopSelect') as HTMLSelectElement;
+
+      // Disable keyboard navigation on select element
+      hopSel.addEventListener('keydown', (e) => {
+        if (e.key.startsWith('Arrow')) {
+          e.preventDefault();
+        }
+      });
 
       // generate options once
       HOP_RANGE.forEach(n => {
@@ -183,10 +189,22 @@ export function mountSingle(root: HTMLElement) {
       if (shouldEnableArrowKeys('single')) {
         keydownHandler = (e: KeyboardEvent) => {
           if (p.millis() - hopStart < hopDur) return;
-          if (e.key === 'ArrowRight' || e.key === 'd') startHop(1);
-          if (e.key === 'ArrowLeft' || e.key === 'a') startHop(-1);
+          if (e.key === 'ArrowRight' || e.key === 'd') {
+            e.preventDefault();
+            e.stopPropagation();
+            startHop(1);
+          }
+          if (e.key === 'ArrowLeft' || e.key === 'a') {
+            e.preventDefault();
+            e.stopPropagation();
+            startHop(-1);
+          }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
         };
-        window.addEventListener('keydown', keydownHandler);
+        window.addEventListener('keydown', keydownHandler, true);
       }
 
       // Animate frog intro from 0 to 0 (no sound)
@@ -198,8 +216,8 @@ export function mountSingle(root: HTMLElement) {
         setToIdx,
         setHopStart,
         setHopDur,
-        setAnimating,
-        () => p.millis()
+        () => p.millis(),
+        undefined // No animation state in single mode
       );
 
       // Clean up event listener when unmounting
@@ -213,66 +231,27 @@ export function mountSingle(root: HTMLElement) {
     };
 
     p.draw = () => {
-      const t = p.millis();
-
-      // --- Animate frog position ---
-      const alpha = p.constrain((t - hopStart) / hopDur, 0, 1);
-      const frogXw = p.lerp(fromIdx, toIdx, alpha) * gap;
-      const frogY = frogYArc(alpha, canvas.h / 2, 20);
-
-      // --- Camera follows frog ---
-      const camX = frogXw - canvas.w / 2;
-
-      p.background(255);
-
-      // --- Draw lily pads within ±10 of frog, always show at least -10 to ... ---
-      const start = Math.min(-10, frogIdx - 10);
-      const end = frogIdx + 10;
-      const showAvailable = shouldDisplayAvailablePads('single');
-      for (let i = start; i <= end; i++) {
-        // Skip the current pad - we'll draw it last
-        if (i === frogIdx) continue;
-        
-        const screenX = worldX(i) - camX;
-        const reachable = ((i - frogIdx) % hopSize + hopSize) % hopSize === 0;
-        p.fill(showAvailable && reachable ? '#8f8' : '#ddd');
-        p.circle(screenX, canvas.h / 2, 24);
-
-        // Draw debug labels if enabled
-        if (debugMode) {
+      drawAnimationFrame({
+        p,
+        state: {
+          frogIdx,
+          fromIdx,
+          toIdx,
+          hopStart,
+          hopDur
+          // No animation state in single mode
+        },
+        showAvailable: shouldDisplayAvailablePads('single'),
+        isReachable: (idx) => ((idx - frogIdx) % hopSize + hopSize) % hopSize === 0,
+        showBadge: (frogXw, frogY, camX) => {
+          p.textSize(14);
+          p.fill(255);
+          p.circle(frogXw - camX, frogY - 36, 20);
           p.fill(0);
-          p.textSize(12);
-          p.textAlign(p.CENTER, p.TOP);
-          p.text(i.toString(), screenX, canvas.h / 2 + 30);
-          p.textSize(24); // Reset text size
-        }
-      }
-
-      // Draw current pad last with darker green
-      const currentPadX = worldX(frogIdx) - camX;
-      p.fill('#4a4');
-      p.circle(currentPadX, canvas.h / 2, 24);
-
-      // Draw debug label for current pad if enabled
-      if (debugMode) {
-        p.fill(0);
-        p.textSize(12);
-        p.textAlign(p.CENTER, p.TOP);
-        p.text(frogIdx.toString(), currentPadX, canvas.h / 2 + 30);
-        p.textSize(24); // Reset text size
-      }
-
-      // --- Draw frog emoji ---
-      p.textSize(32);
-      p.textAlign(p.CENTER, p.CENTER);
-      p.text('🐸', frogXw - camX, frogY - 12);
-
-      // ---- badge ----
-      p.textSize(14);
-      p.fill(255);
-      p.circle(frogXw - camX, frogY - 36, 20);
-      p.fill(0);
-      p.text(hopSize.toString(), frogXw - camX, frogY - 36);
+          p.text(hopSize.toString(), frogXw - camX, frogY - 36);
+        },
+        debugMode
+      });
     };
   }, root);
 }

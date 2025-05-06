@@ -21,41 +21,54 @@ export let debugMode = true; // Show numbers by default
 export function toggleDebug() { debugMode = !debugMode; }
 
 /* Feature flags */
-export const FEATURES = {
-  showToggleLabelsButton: false // Hide toggle button by default
+export interface FeatureFlags {
+  showToggleLabelsButton: boolean;
+  // Add more feature flags here as needed
+}
+
+const DEFAULT_FEATURES: FeatureFlags = {
+  showToggleLabelsButton: false
 };
 
-/* Frog reset helper (shared, instant) */
+export const FEATURES: FeatureFlags = { ...DEFAULT_FEATURES };
+
+export function setFeatureFlag<K extends keyof FeatureFlags>(
+  flag: K,
+  value: FeatureFlags[K]
+): void {
+  FEATURES[flag] = value;
+}
+
+export function getFeatureFlag<K extends keyof FeatureFlags>(
+  flag: K
+): FeatureFlags[K] {
+  return FEATURES[flag];
+}
+
+/* Frog reset helper (unified) */
 export function resetFrog(
   frogIdx: number,
   setFrogIdx: (n: number) => void,
   setFromIdx: (n: number) => void,
   setToIdx: (n: number) => void,
-  setHopStart: (n: number) => void
-) {
-  setFromIdx(frogIdx);
-  setToIdx(0);
-  setFrogIdx(0);
-  setHopStart(performance.now());
-}
-
-/* Frog reset with animation (no sound) */
-export function animateFrogReset(
-  frogIdx: number,
-  setFrogIdx: (n: number) => void,
-  setFromIdx: (n: number) => void,
-  setToIdx: (n: number) => void,
   setHopStart: (n: number) => void,
-  setHopDur: (n: number) => void,
-  setAnimating: (b: boolean) => void,
-  sketchMillis: () => number
+  setHopDur?: (n: number) => void,
+  setAnimating?: (b: boolean) => void,
+  sketchMillis?: () => number
 ) {
   setFromIdx(frogIdx);
   setToIdx(0);
-  setHopDur(MS_PER_PAD * Math.max(1, Math.abs(frogIdx)));
-  setHopStart(sketchMillis());
   setFrogIdx(0);
-  setAnimating(true);
+  
+  // Handle animation if animation parameters are provided
+  if (setHopDur && setAnimating && sketchMillis) {
+    setHopDur(MS_PER_PAD * Math.max(1, Math.abs(frogIdx)));
+    setHopStart(sketchMillis());
+    setAnimating(true);
+  } else {
+    // Instant reset
+    setHopStart(performance.now());
+  }
 }
 
 /* Frog intro animation (no sound) */
@@ -67,19 +80,21 @@ export function animateFrogIntro(
   setToIdx: (n: number) => void,
   setHopStart: (n: number) => void,
   setHopDur: (n: number) => void,
-  setAnimating: (b: boolean) => void,
-  sketchMillis: () => number
+  sketchMillis: () => number,
+  setAnimating?: (b: boolean) => void
 ) {
   setFromIdx(fromIdx);
   setToIdx(toIdx);
   setHopDur(MS_PER_PAD * Math.max(1, Math.abs(toIdx - fromIdx)));
   setHopStart(sketchMillis());
   setFrogIdx(toIdx);
-  setAnimating(true);
+  if (setAnimating) {
+    setAnimating(true);
+  }
 }
 
 /* Audio */
-const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+const audioCtx = new AudioContext();
 const samples = [new Audio(`${import.meta.env.BASE_URL}sounds/frog-math-hop.mp3`)];
 samples.forEach(a => (a.preload = 'auto'));
 

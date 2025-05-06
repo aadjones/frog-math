@@ -1,7 +1,8 @@
 import p5 from 'p5';
-import { gap, canvas, playHopSound, worldX, debugMode, toggleDebug, animateFrogReset, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, FEATURES } from './shared';
-import { frogYArc, MS_PER_PAD } from '../frogPhysics';
+import { canvas, playHopSound, debugMode, toggleDebug, resetFrog, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, getFeatureFlag } from './shared';
+import { MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
+import { drawAnimationFrame } from './animation';
 import '../ui/sharedStyle.css';
 
 export function mountMulti(root: HTMLElement) {
@@ -24,7 +25,7 @@ export function mountMulti(root: HTMLElement) {
     </div>
     <div id="pond"></div>
     <div id="belowSketch">
-      ${FEATURES.showToggleLabelsButton ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
+      ${getFeatureFlag('showToggleLabelsButton') ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
       <button id="resetFrogBtn">Reset Frog</button>
     </div>
   `;
@@ -101,74 +102,60 @@ export function mountMulti(root: HTMLElement) {
         setToIdx,
         setHopStart,
         setHopDur,
-        setAnimating,
-        () => sketch.millis()
+        () => sketch.millis(),
+        setAnimating
       );
     };
 
     p.draw = () => {
-      const t = p.millis();
-      const alpha = animating ? p.constrain((t-hopStart)/hopDur,0,1) : 1;
-      if (animating && alpha === 1) animating = false;
-      const frogXw = p.lerp(fromIdx,toIdx,alpha)*gap;
-      const frogY = frogYArc(alpha, canvas.h/2, 20);
-      const camX = frogXw - canvas.w/2;
-
-      p.background(255);
-
-      // draw pads
-      const showAvailable = shouldDisplayAvailablePads('multi');
-      for(let i=frogIdx-11;i<=frogIdx+11;i++){
-        const screenX = worldX(i)-camX;
-        const reachable = ((i-frogIdx)%5===0)||((i-frogIdx)%7===0);
-        p.fill(showAvailable && reachable ? '#8f8' : (i === frogIdx ? '#8f8' : '#ddd'));
-        p.circle(screenX,canvas.h/2,24);
-        // Always show the fly on the target pad
-        if(i===target) {
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(24);
-          p.text('🪰', screenX, canvas.h/2);
-        }
-        // Draw debug labels if enabled
-        if (debugMode) {
+      drawAnimationFrame({
+        p,
+        state: {
+          frogIdx,
+          fromIdx,
+          toIdx,
+          hopStart,
+          hopDur,
+          animating,
+          setAnimating
+        },
+        showAvailable: shouldDisplayAvailablePads('multi'),
+        isReachable: (idx) => ((idx - frogIdx) % 5 === 0) || ((idx - frogIdx) % 7 === 0),
+        showTarget: (idx, screenX) => {
+          if (idx === target) {
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(24);
+            p.text('🪰', screenX, canvas.h / 2);
+          }
+        },
+        showBadge: (frogXw, frogY, camX) => {
+          const badgeY = frogY - 36;
+          const badgeSpacing = 22;
+          p.textSize(14);
+          // Left badge (5)
+          p.fill(255);
+          p.circle(frogXw - camX - badgeSpacing/2, badgeY, 20);
           p.fill(0);
-          p.textSize(12);
-          p.textAlign(p.CENTER, p.TOP);
-          p.text(i.toString(), screenX, canvas.h / 2 + 30);
-          p.textSize(24); // Reset text size
+          p.text('5', frogXw - camX - badgeSpacing/2, badgeY);
+          // Right badge (7)
+          p.fill(255);
+          p.circle(frogXw - camX + badgeSpacing/2, badgeY, 20);
+          p.fill(0);
+          p.text('7', frogXw - camX + badgeSpacing/2, badgeY);
+        },
+        debugMode,
+        onWin: (frogXw, camX) => {
+          if (frogIdx === target && !animating) {
+            p.text('🎉', frogXw - camX, canvas.h/2-60);
+            if (!hasWon) {
+              playVictorySound();
+              hasWon = true;
+            }
+          } else {
+            hasWon = false;
+          }
         }
-      }
-
-      // draw frog
-      p.textSize(32);
-      p.textAlign(p.CENTER,p.CENTER);
-      p.text('🐸',frogXw - camX, frogY - 12);
-
-      // draw hop size badges (5 and 7) above the frog
-      const badgeY = frogY - 36;
-      const badgeSpacing = 22;
-      p.textSize(14);
-      // Left badge (5)
-      p.fill(255);
-      p.circle(frogXw - camX - badgeSpacing/2, badgeY, 20);
-      p.fill(0);
-      p.text('5', frogXw - camX - badgeSpacing/2, badgeY);
-      // Right badge (7)
-      p.fill(255);
-      p.circle(frogXw - camX + badgeSpacing/2, badgeY, 20);
-      p.fill(0);
-      p.text('7', frogXw - camX + badgeSpacing/2, badgeY);
-
-      // win?
-      if (frogIdx===target && !animating) {
-        p.text('🎉',frogXw - camX, canvas.h/2-60);
-        if (!hasWon) {
-          playVictorySound();
-          hasWon = true;
-        }
-      } else {
-        hasWon = false;
-      }
+      });
     };
   }, pond);
 
@@ -198,7 +185,7 @@ export function mountMulti(root: HTMLElement) {
   wrapper.querySelector('#toggleDebugBtn')?.addEventListener('click', () => toggleDebug());
   wrapper.querySelector('#resetFrogBtn')!.addEventListener('click', () => {
     if (animating) return;
-    animateFrogReset(
+    resetFrog(
       frogIdx,
       setFrogIdx,
       setFromIdx,
