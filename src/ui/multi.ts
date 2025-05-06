@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { canvas, playHopSound, debugMode, toggleDebug, resetFrog, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, FEATURES } from './shared';
+import { canvas, playHopSound, debugMode, toggleDebug, resetFrog, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, getFeatureFlag } from './shared';
 import { MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { drawAnimationFrame } from './animation';
@@ -25,7 +25,7 @@ export function mountMulti(root: HTMLElement) {
     </div>
     <div id="pond"></div>
     <div id="belowSketch">
-      ${FEATURES.showToggleLabelsButton ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
+      ${getFeatureFlag('showToggleLabelsButton') ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
       <button id="resetFrogBtn">Reset Frog</button>
     </div>
   `;
@@ -102,8 +102,8 @@ export function mountMulti(root: HTMLElement) {
         setToIdx,
         setHopStart,
         setHopDur,
-        setAnimating,
-        () => sketch.millis()
+        () => sketch.millis(),
+        setAnimating
       );
     };
 

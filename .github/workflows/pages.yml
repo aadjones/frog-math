@@ -14,6 +14,16 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci
+      - name: Run tests
+        run: |
+          echo "::group::Running Tests"
+          npm run test
+          echo "::endgroup::"
+      - name: Run linting
+        run: |
+          echo "::group::Running Linting"
+          npm run lint
+          echo "::endgroup::"
       - run: npx vite build --base=/frog-math/
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }

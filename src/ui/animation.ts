@@ -37,11 +37,13 @@ export function drawAnimationFrame({
   const t = p.millis();
 
   // Calculate animation progress
-  const alpha = animating !== undefined 
-    ? (animating ? p.constrain((t - hopStart) / hopDur, 0, 1) : 1)
-    : p.constrain((t - hopStart) / hopDur, 0, 1);
+  // If animating is undefined, we're in continuous mode (single player)
+  // If animating is defined, we're in state-based mode (multi player)
+  const alpha = animating === undefined
+    ? p.constrain((t - hopStart) / hopDur, 0, 1)
+    : (animating ? p.constrain((t - hopStart) / hopDur, 0, 1) : 1);
   
-  // Handle animation completion
+  // Handle animation completion only in state-based mode
   if (animating && alpha === 1 && setAnimating) {
     setAnimating(false);
   }

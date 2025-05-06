@@ -1,6 +1,6 @@
 /// <reference types="p5/global" />
 import p5 from 'p5';
-import { canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, debugMode, toggleDebug, FEATURES } from './shared';
+import { canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, debugMode, toggleDebug, getFeatureFlag } from './shared';
 import { MS_PER_PAD, hopDuration, nextIndex } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { resetFrog, animateFrogIntro } from './shared';
@@ -38,8 +38,6 @@ export function mountSingle(root: HTMLElement) {
     function setToIdx(n: number) { toIdx = n; }
     function setHopStart(n: number) { hopStart = n; }
     function setHopDur(n: number) { hopDur = n; }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    function setAnimating(_b: boolean) { /* not used in single, but required for shared */ }
 
     p.setup = () => {
       // Create UI elements first
@@ -121,7 +119,7 @@ export function mountSingle(root: HTMLElement) {
       const belowSketch = document.createElement('div');
       belowSketch.id = 'belowSketch';
       belowSketch.innerHTML = `
-        ${FEATURES.showToggleLabelsButton ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
+        ${getFeatureFlag('showToggleLabelsButton') ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
         <button id="resetFrogBtn">Reset Frog</button>
       `;
 
@@ -145,7 +143,7 @@ export function mountSingle(root: HTMLElement) {
         });
 
       // Add debug and reset button listeners
-      if (FEATURES.showToggleLabelsButton) {
+      if (getFeatureFlag('showToggleLabelsButton')) {
         root.querySelector('#toggleDebugBtn')!
           .addEventListener('click', toggleDebug);
       }
@@ -158,12 +156,19 @@ export function mountSingle(root: HTMLElement) {
             setToIdx,
             setHopStart,
             setHopDur,
-            setAnimating,
+            undefined,
             () => p.millis()
           );
         });
 
       const hopSel = root.querySelector('#hopSelect') as HTMLSelectElement;
+
+      // Disable keyboard navigation on select element
+      hopSel.addEventListener('keydown', (e) => {
+        if (e.key.startsWith('Arrow')) {
+          e.preventDefault();
+        }
+      });
 
       // generate options once
       HOP_RANGE.forEach(n => {
@@ -184,10 +189,22 @@ export function mountSingle(root: HTMLElement) {
       if (shouldEnableArrowKeys('single')) {
         keydownHandler = (e: KeyboardEvent) => {
           if (p.millis() - hopStart < hopDur) return;
-          if (e.key === 'ArrowRight' || e.key === 'd') startHop(1);
-          if (e.key === 'ArrowLeft' || e.key === 'a') startHop(-1);
+          if (e.key === 'ArrowRight' || e.key === 'd') {
+            e.preventDefault();
+            e.stopPropagation();
+            startHop(1);
+          }
+          if (e.key === 'ArrowLeft' || e.key === 'a') {
+            e.preventDefault();
+            e.stopPropagation();
+            startHop(-1);
+          }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
         };
-        window.addEventListener('keydown', keydownHandler);
+        window.addEventListener('keydown', keydownHandler, true);
       }
 
       // Animate frog intro from 0 to 0 (no sound)
@@ -199,8 +216,8 @@ export function mountSingle(root: HTMLElement) {
         setToIdx,
         setHopStart,
         setHopDur,
-        setAnimating,
-        () => p.millis()
+        () => p.millis(),
+        undefined // No animation state in single mode
       );
 
       // Clean up event listener when unmounting
@@ -222,6 +239,7 @@ export function mountSingle(root: HTMLElement) {
           toIdx,
           hopStart,
           hopDur
+          // No animation state in single mode
         },
         showAvailable: shouldDisplayAvailablePads('single'),
         isReachable: (idx) => ((idx - frogIdx) % hopSize + hopSize) % hopSize === 0,
