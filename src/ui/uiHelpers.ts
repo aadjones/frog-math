@@ -17,6 +17,9 @@ export function addBackToMenu(container: HTMLElement) {
       } else if (mode === 'multi') {
         const { mountMulti } = await import('./multi');
         mountMulti(container);
+      } else if (mode === 'uberhopper') {
+        const { mountUberhopper } = await import('./uberhopper');
+        mountUberhopper(container);
       } else {
         const { mountPond } = await import('./pond');
         mountPond(container);
