@@ -99,6 +99,24 @@
     }
   }
   
+  &--pond {
+    border: 2px solid map-get($colors, 'tertiary');
+    box-shadow: 0 4px 16px rgba(156, 39, 176, 0.10);
+    
+    &:hover {
+      box-shadow: 0 8px 24px rgba(156, 39, 176, 0.18);
+    }
+  }
+  
+  &--uberhopper {
+    border: 2px solid #ff6b6b;
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.10);
+    
+    &:hover {
+      box-shadow: 0 8px 24px rgba(255, 107, 107, 0.18);
+    }
+  }
+  
   @include respond-to('mobile') {
     width: 100%;
     min-width: unset;

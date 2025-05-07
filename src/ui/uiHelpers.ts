@@ -14,9 +14,12 @@ export function addBackToMenu(container: HTMLElement) {
       if (mode === 'single') {
         const { mountSingle } = await import('./single');
         mountSingle(container);
-      } else {
+      } else if (mode === 'multi') {
         const { mountMulti } = await import('./multi');
         mountMulti(container);
+      } else {
+        const { mountPond } = await import('./pond');
+        mountPond(container);
       }
     });
   });
