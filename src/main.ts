@@ -10,8 +10,11 @@ mountMenu(root, async mode => {
   } else if (mode === 'multi') {
     const { mountMulti } = await import('./ui/multi');
     mountMulti(root);
-  } else {
+  } else if (mode === 'pond') {
     const { mountPond } = await import('./ui/pond');
     mountPond(root);
+  } else if (mode === 'uberhopper') {
+    const { mountUberhopper } = await import('./ui/uberhopper');
+    mountUberhopper(root);
   }
 }); 

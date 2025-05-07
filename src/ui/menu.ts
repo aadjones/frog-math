@@ -1,4 +1,4 @@
-export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'multi'|'pond')=>void){
+export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'multi'|'pond'|'uberhopper')=>void){
   container.innerHTML = '';
 
   // Main wrapper
@@ -56,9 +56,20 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   pondCard.innerHTML = `
     <div class="menu-card-icon">⭕</div>
     <div class="menu-card-title">Pond</div>
-    <div class="menu-card-subtitle">Hop around the circle</div>
+    <div class="menu-card-subtitle">Hoppin' around</div>
   `;
   cards.appendChild(pondCard);
+
+  // Uberhopper card
+  const uberhopperCard = document.createElement('button');
+  uberhopperCard.className = 'menu-card menu-card--uberhopper';
+  uberhopperCard.id = 'uberhopperBtn';
+  uberhopperCard.innerHTML = `
+    <div class="menu-card-icon">🔄</div>
+    <div class="menu-card-title">Überhopper</div>
+    <div class="menu-card-subtitle">Frogness idealized</div>
+  `;
+  cards.appendChild(uberhopperCard);
 
   wrapper.appendChild(cards);
 
@@ -78,4 +89,5 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   singleCard.addEventListener('click', () => onSelect('single'));
   multiCard.addEventListener('click', () => onSelect('multi'));
   pondCard.addEventListener('click', () => onSelect('pond'));
+  uberhopperCard.addEventListener('click', () => onSelect('uberhopper'));
 } 
