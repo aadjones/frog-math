@@ -2,6 +2,7 @@ import p5 from 'p5';
 import { playHopSound } from './shared';
 import { hopDuration, modIndex } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
+import { loadUberhopperImageForP5, drawUberhopper } from './imageLoader';
 
 export function mountUberhopper(root: HTMLElement) {
   root.innerHTML = '';
@@ -37,7 +38,20 @@ export function mountUberhopper(root: HTMLElement) {
   const canvasDiv = content.querySelector('#pondCanvas') as HTMLElement;
   canvasDiv.style.marginTop = '32px';
   const sketch = new p5(p => {
-    p.setup = () => p.createCanvas(400, 400);
+    let uberhopperImage: p5.Image | null = null;
+
+    p.setup = async () => {
+      // Load uberhopper image
+      try {
+        uberhopperImage = await loadUberhopperImageForP5(p);
+      } catch {
+        console.warn('Failed to load uberhopper image, using emoji fallback');
+        uberhopperImage = null;
+      }
+
+      p.createCanvas(400, 400);
+    };
+
     p.draw = () => {
       p.background(255);
       p.translate(p.width/2, p.height/2 + 20);
@@ -78,8 +92,9 @@ export function mountUberhopper(root: HTMLElement) {
       }
       const fx = frogR * Math.cos(frogAng);
       const fy = frogR * Math.sin(frogAng);
-      p.textSize(24);
-      p.text('🐸', fx, fy);
+      
+      // Draw uberhopper using the new image-aware function
+      drawUberhopper(p, fx, fy, uberhopperImage, 24);
 
       // Draw hopper number bubble with radial orientation
       const bubbleOffset = 22;

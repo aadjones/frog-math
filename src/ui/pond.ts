@@ -2,6 +2,7 @@ import p5 from 'p5';
 import { playHopSound } from './shared';
 import { modIndex, hopDuration, MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
+import { loadFrogImageForP5, drawFrog } from './imageLoader';
 
 export function mountPond(root: HTMLElement) {
   root.innerHTML = '';
@@ -47,7 +48,20 @@ export function mountPond(root: HTMLElement) {
   const canvasDiv = pondContent.querySelector('#pondCanvas') as HTMLElement;
   canvasDiv.style.marginTop = '32px';
   const sketch = new p5(p => {
-    p.setup = () => p.createCanvas(400, 400);
+    let frogImage: p5.Image | null = null;
+
+    p.setup = async () => {
+      // Load frog image
+      try {
+        frogImage = await loadFrogImageForP5(p);
+      } catch {
+        console.warn('Failed to load frog image, using emoji fallback');
+        frogImage = null;
+      }
+
+      p.createCanvas(400, 400);
+    };
+
     p.draw = () => {
       p.background(255);
       p.translate(p.width/2, p.height/2 + 20);
@@ -92,8 +106,13 @@ export function mountPond(root: HTMLElement) {
       }
       const fx = frogR * Math.cos(frogAng);
       const fy = frogR * Math.sin(frogAng);
-      p.textSize(24);
-      p.text('🐸', fx, fy);
+      
+      // Determine frog direction based on movement direction
+      // For circular movement: clockwise (lastDir = 1) = facing right, counterclockwise (lastDir = -1) = facing left
+      const facingRight = lastDir === 1;
+      
+      // Draw frog using the new image-aware function
+      drawFrog(p, fx, fy, frogImage, 24, facingRight);
 
       // Draw hopper number bubble with radial orientation
       const bubbleOffset = 22;
