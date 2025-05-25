@@ -5,6 +5,7 @@ import { MS_PER_PAD, hopDuration, nextIndex } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { resetFrog, animateFrogIntro } from './shared';
 import { drawAnimationFrame } from './animation';
+import { loadFrogImageForP5 } from './imageLoader';
 import '../ui/sharedStyle.css';
 
 const HOP_RANGE = [0,1,2,3,4,5,6,7,8,9,10];   // change range if you like
@@ -22,6 +23,7 @@ export function mountSingle(root: HTMLElement) {
   addBackToMenu(root);
   new p5(p => {
     let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+    let frogImage: p5.Image | null = null;
 
     function setFrogIdx(n: number) { frogIdx = n; }
     function setFromIdx(n: number) { fromIdx = n; }
@@ -43,7 +45,15 @@ export function mountSingle(root: HTMLElement) {
       playHopSound(hopDur);
     }
 
-    p.setup = () => {
+    p.setup = async () => {
+      // Load frog image
+      try {
+        frogImage = await loadFrogImageForP5(p);
+      } catch {
+        console.warn('Failed to load frog image, using emoji fallback');
+        frogImage = null;
+      }
+
       // Create UI elements first
       const ui = document.createElement('div');
       ui.id = 'ui';
@@ -133,7 +143,7 @@ export function mountSingle(root: HTMLElement) {
       container.appendChild(style);
       container.appendChild(canvasElem);
       container.appendChild(belowSketch);
-      root.appendChild(createInstructionBanner('Meet the hoppers! 🐸'));
+      root.appendChild(createInstructionBanner('Meet the hoppers!'));
       root.appendChild(wrapCenteredContent(container));
 
       // Add hop button listeners
@@ -250,13 +260,25 @@ export function mountSingle(root: HTMLElement) {
         showAvailable: shouldDisplayAvailablePads('single'),
         isReachable: (idx) => ((idx - frogIdx) % hopSize + hopSize) % hopSize === 0,
         showBadge: (frogXw, frogY, camX) => {
-          p.textSize(14);
+          // Adjust badge position for the frog image - move it above the frog
+          const badgeX = frogXw - camX;
+          const badgeY = frogY - 40; // Increased from -28 to move badge higher
+          
+          // Draw badge circle
           p.fill(255);
-          p.circle(frogXw - camX, frogY - 36, 20);
+          p.stroke(0);
+          p.strokeWeight(1);
+          p.circle(badgeX, badgeY, 20);
+          
+          // Draw badge text with explicit alignment
           p.fill(0);
-          p.text(hopSize.toString(), frogXw - camX, frogY - 36);
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(14);
+          p.text(hopSize.toString(), badgeX, badgeY);
         },
-        debugMode
+        debugMode,
+        frogImage
       });
     };
   }, root);

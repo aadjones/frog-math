@@ -129,7 +129,9 @@ export function mountMulti(root: HTMLElement) {
           }
         },
         showBadge: (frogXw, frogY, camX) => {
-          const badgeY = frogY - 36;
+          // Frog image is centered at (frogXw - camX, frogY - 12)
+          // For a 32x32 image, position badges above the frog image
+          const badgeY = frogY - 12 - 16 - 8; // frog center - half height - gap
           const badgeSpacing = 22;
           p.textSize(14);
           // Left badge (5)

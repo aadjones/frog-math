@@ -1,6 +1,7 @@
 import p5 from 'p5';
 import { canvas, worldX, gap } from './shared';
 import { frogYArc } from '../frogPhysics';
+import { drawFrog } from './imageLoader';
 
 export interface AnimationState {
   frogIdx: number;
@@ -21,6 +22,7 @@ export interface DrawOptions {
   showBadge?: (frogXw: number, frogY: number, camX: number) => void;
   debugMode: boolean;
   onWin?: (frogXw: number, camX: number) => void;
+  frogImage?: p5.Image | null;
 }
 
 export function drawAnimationFrame({
@@ -31,7 +33,8 @@ export function drawAnimationFrame({
   showTarget,
   showBadge,
   debugMode,
-  onWin
+  onWin,
+  frogImage
 }: DrawOptions) {
   const { frogIdx, fromIdx, toIdx, hopStart, hopDur, animating, setAnimating } = state;
   const t = p.millis();
@@ -99,10 +102,8 @@ export function drawAnimationFrame({
     p.textSize(24); // Reset text size
   }
 
-  // Draw frog
-  p.textSize(32);
-  p.textAlign(p.CENTER, p.CENTER);
-  p.text('🐸', frogXw - camX, frogY - 12);
+  // Draw frog using the new image-aware function
+  drawFrog(p, frogXw - camX, frogY - 12, frogImage, 32);
 
   // Draw badge if provided
   if (showBadge) {
