@@ -3,6 +3,8 @@ import { canvas, playHopSound, debugMode, toggleDebug, resetFrog, animateFrogInt
 import { MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { drawAnimationFrame } from './animation';
+import { loadFrogImageForP5 } from './imageLoader';
+import { ConfettiSystem } from './confetti';
 import '../ui/sharedStyle.css';
 
 export function mountMulti(root: HTMLElement) {
@@ -88,9 +90,22 @@ export function mountMulti(root: HTMLElement) {
   let animating = false;
   let hasWon = false;
 
+  // Initialize confetti system
+  const confetti = new ConfettiSystem();
+
   // p5 sketch
   const sketch = new p5(p => {
-    p.setup = () => {
+    let frogImage: p5.Image | null = null;
+
+    p.setup = async () => {
+      // Load frog image
+      try {
+        frogImage = await loadFrogImageForP5(p);
+      } catch {
+        console.warn('Failed to load frog image, using emoji fallback');
+        frogImage = null;
+      }
+
       p.createCanvas(canvas.w, canvas.h, p.P2D);
       p.textSize(24);
       p.textAlign(p.CENTER, p.CENTER);
@@ -108,6 +123,9 @@ export function mountMulti(root: HTMLElement) {
     };
 
     p.draw = () => {
+      // Update confetti physics
+      confetti.update();
+
       drawAnimationFrame({
         p,
         state: {
@@ -129,26 +147,41 @@ export function mountMulti(root: HTMLElement) {
           }
         },
         showBadge: (frogXw, frogY, camX) => {
-          const badgeY = frogY - 36;
+          // Position badges above the frog image with proper spacing
+          const badgeY = frogY - 40; // Same offset as single mode
           const badgeSpacing = 22;
-          p.textSize(14);
+          const leftBadgeX = frogXw - camX - badgeSpacing/2;
+          const rightBadgeX = frogXw - camX + badgeSpacing/2;
+          
           // Left badge (5)
           p.fill(255);
-          p.circle(frogXw - camX - badgeSpacing/2, badgeY, 20);
+          p.stroke(0);
+          p.strokeWeight(1);
+          p.circle(leftBadgeX, badgeY, 20);
           p.fill(0);
-          p.text('5', frogXw - camX - badgeSpacing/2, badgeY);
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(14);
+          p.text('5', leftBadgeX, badgeY);
+          
           // Right badge (7)
           p.fill(255);
-          p.circle(frogXw - camX + badgeSpacing/2, badgeY, 20);
+          p.stroke(0);
+          p.strokeWeight(1);
+          p.circle(rightBadgeX, badgeY, 20);
           p.fill(0);
-          p.text('7', frogXw - camX + badgeSpacing/2, badgeY);
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(14);
+          p.text('7', rightBadgeX, badgeY);
         },
         debugMode,
-        onWin: (frogXw, camX) => {
+        frogImage,
+        onWin: () => {
           if (frogIdx === target && !animating) {
-            p.text('🎉', frogXw - camX, canvas.h/2-60);
             if (!hasWon) {
               playVictorySound();
+              confetti.start();
               hasWon = true;
             }
           } else {
@@ -156,6 +189,9 @@ export function mountMulti(root: HTMLElement) {
           }
         }
       });
+
+      // Draw confetti on top of everything
+      confetti.draw(p);
     };
   }, pond);
 

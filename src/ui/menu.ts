@@ -77,7 +77,7 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   const review = document.createElement('div');
   review.className = 'menu-review';
   review.innerHTML = `
-    "My kid never liked school until she started hopping with FrogMath. Now, she keeps muttering inscrutable things about flügenfrögen."
+    "My kid never liked school until she started hopping with FrogMath. Now, she keeps muttering inscrutable things about flügenfröger."
     <span class="menu-review__author">— Jeff Hashfield</span>
   `;
   wrapper.appendChild(review);
