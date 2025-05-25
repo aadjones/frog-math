@@ -4,6 +4,7 @@ import { MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { drawAnimationFrame } from './animation';
 import { loadFrogImageForP5 } from './imageLoader';
+import { ConfettiSystem } from './confetti';
 import '../ui/sharedStyle.css';
 
 export function mountMulti(root: HTMLElement) {
@@ -89,6 +90,9 @@ export function mountMulti(root: HTMLElement) {
   let animating = false;
   let hasWon = false;
 
+  // Initialize confetti system
+  const confetti = new ConfettiSystem();
+
   // p5 sketch
   const sketch = new p5(p => {
     let frogImage: p5.Image | null = null;
@@ -119,6 +123,9 @@ export function mountMulti(root: HTMLElement) {
     };
 
     p.draw = () => {
+      // Update confetti physics
+      confetti.update();
+
       drawAnimationFrame({
         p,
         state: {
@@ -170,11 +177,11 @@ export function mountMulti(root: HTMLElement) {
         },
         debugMode,
         frogImage,
-        onWin: (frogXw, camX) => {
+        onWin: () => {
           if (frogIdx === target && !animating) {
-            p.text('🎉', frogXw - camX, canvas.h/2-60);
             if (!hasWon) {
               playVictorySound();
+              confetti.start();
               hasWon = true;
             }
           } else {
@@ -182,6 +189,9 @@ export function mountMulti(root: HTMLElement) {
           }
         }
       });
+
+      // Draw confetti on top of everything
+      confetti.draw(p);
     };
   }, pond);
 
