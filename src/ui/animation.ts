@@ -56,6 +56,9 @@ export function drawAnimationFrame({
   const frogY = frogYArc(alpha, canvas.h / 2, 20);
   const camX = frogXw - canvas.w / 2;
 
+  // Determine frog direction based on movement
+  const facingRight = toIdx >= fromIdx; // Face right by default, only face left when moving left
+
   // Clear background
   p.background(255);
 
@@ -103,7 +106,7 @@ export function drawAnimationFrame({
   }
 
   // Draw frog using the new image-aware function
-  drawFrog(p, frogXw - camX, frogY - 12, frogImage, 32);
+  drawFrog(p, frogXw - camX, frogY - 12, frogImage, 32, facingRight);
 
   // Draw badge if provided
   if (showBadge) {

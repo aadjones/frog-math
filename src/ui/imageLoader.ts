@@ -45,13 +45,27 @@ export function loadFrogImageForP5(p: p5): Promise<p5.Image | null> {
 }
 
 // Helper to draw frog (either image or emoji fallback)
-export function drawFrog(p: p5, x: number, y: number, frogImg?: p5.Image | null, size: number = 24) {
+export function drawFrog(p: p5, x: number, y: number, frogImg?: p5.Image | null, size: number = 24, facingRight: boolean = true) {
   if (frogImg) {
-    // Draw the image centered at x, y
+    // Save the current transformation matrix
+    p.push();
+    
+    // Move to the frog position
+    p.translate(x, y);
+    
+    // Flip horizontally if facing right
+    if (facingRight) {
+      p.scale(-1, 1);
+    }
+    
+    // Draw the image centered at the origin (since we translated)
     p.imageMode(p.CENTER);
-    p.image(frogImg, x, y, size, size);
+    p.image(frogImg, 0, 0, size, size);
+    
+    // Restore the transformation matrix
+    p.pop();
   } else {
-    // Fallback to emoji
+    // Fallback to emoji (emojis don't need flipping)
     p.textAlign(p.CENTER, p.CENTER);
     p.textSize(size);
     p.text('🐸', x, y);
