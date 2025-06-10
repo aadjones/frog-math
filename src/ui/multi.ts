@@ -288,7 +288,7 @@ export function mountMulti(root: HTMLElement) {
   };
   backToMenuBtn.onclick = () => {
     finalScreen.style.display = "none";
-    window.location.href = "/";
+    window.location.href = "/frog-math/";
   };
 
   // p5 sketch
@@ -332,8 +332,7 @@ export function mountMulti(root: HTMLElement) {
           animating,
           setAnimating,
         },
-        isReachable: (idx) =>
-          (idx - frogIdx) % 5 === 0 || (idx - frogIdx) % 7 === 0,
+        isReachable: () => false,
         showTarget: (idx, screenX) => {
           const currentLevel = levelManager.getCurrentLevel();
           if (idx === currentLevel.target) {
