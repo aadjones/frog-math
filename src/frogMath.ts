@@ -1,15 +1,15 @@
 export function reachablePads(hop: number, padCount: number): Set<number> {
-    const pads = new Set<number>();
-    for (let i = 0; i < padCount; i++) {
-      if (i % hop === 0) pads.add(i);
-    }
-    return pads;
+  const pads = new Set<number>();
+  for (let i = 0; i < padCount; i++) {
+    if (i % hop === 0) pads.add(i);
   }
-  
-  export function gcd(a: number, b: number): number {
-    while (b !== 0) [a, b] = [b, a % b];
-    return a;
-  }
+  return pads;
+}
+
+export function gcd(a: number, b: number): number {
+  while (b !== 0) [a, b] = [b, a % b];
+  return a;
+}
 
 /** Return a Set of pad indexes reachable from `start`
  *  using any combination of hop distances in `hops`
@@ -19,7 +19,7 @@ export function reachablePadsMulti(
   start: number,
   hops: number[],
   min: number,
-  max: number
+  max: number,
 ): Set<number> {
   const reach = new Set<number>([start]);
   const queue = [start];

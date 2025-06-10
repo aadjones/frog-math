@@ -1,40 +1,65 @@
 /// <reference types="p5/global" />
-import p5 from 'p5';
-import { canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, debugMode, toggleDebug, getFeatureFlag } from './shared';
-import { MS_PER_PAD, hopDuration, nextIndex } from '../frogPhysics';
-import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
-import { resetFrog, animateFrogIntro } from './shared';
-import { drawAnimationFrame } from './animation';
-import { loadFrogImageForP5 } from './imageLoader';
-import '../ui/sharedStyle.css';
+import p5 from "p5";
+import {
+  canvas,
+  playHopSound,
+  shouldEnableArrowKeys,
+  debugMode,
+  toggleDebug,
+  getFeatureFlag,
+} from "./shared";
+import { MS_PER_PAD, hopDuration, nextIndex } from "../frogPhysics";
+import {
+  addBackToMenu,
+  wrapCenteredContent,
+  createInstructionBanner,
+} from "./uiHelpers";
+import { resetFrog, animateFrogIntro } from "./shared";
+import { drawAnimationFrame } from "./animation";
+import { loadFrogImageForP5 } from "./imageLoader";
+import "../ui/sharedStyle.css";
 
-const HOP_RANGE = [0,1,2,3,4,5,6,7,8,9,10];   // change range if you like
+const HOP_RANGE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // change range if you like
 
 let frogIdx = 0;
 let hopSize = 3;
 let hopStart = 0;
 let fromIdx = 0;
 let toIdx = 0;
-let hopDur = MS_PER_PAD;  // Will be calculated based on distance
+let hopDur = MS_PER_PAD; // Will be calculated based on distance
 let animating = false;
+let ready = false;
 
 export function mountSingle(root: HTMLElement) {
-  root.innerHTML = '';
+  root.innerHTML = "";
   addBackToMenu(root);
-  new p5(p => {
+  new p5((p) => {
     let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
     let frogImage: p5.Image | null = null;
 
-    function setFrogIdx(n: number) { frogIdx = n; }
-    function setFromIdx(n: number) { fromIdx = n; }
-    function setToIdx(n: number) { toIdx = n; }
-    function setHopStart(n: number) { hopStart = n; }
-    function setHopDur(n: number) { hopDur = n; }
-    function setAnimating(b: boolean) { animating = b; }
+    function setFrogIdx(n: number) {
+      frogIdx = n;
+    }
+    function setFromIdx(n: number) {
+      fromIdx = n;
+    }
+    function setToIdx(n: number) {
+      toIdx = n;
+    }
+    function setHopStart(n: number) {
+      hopStart = n;
+    }
+    function setHopDur(n: number) {
+      hopDur = n;
+    }
+    function setAnimating(b: boolean) {
+      animating = b;
+    }
 
     function startHop(direction: 1 | -1) {
       if (animating) return;
-      const targetIdx = hopSize === 0 ? frogIdx : nextIndex(frogIdx, hopSize, direction);
+      const targetIdx =
+        hopSize === 0 ? frogIdx : nextIndex(frogIdx, hopSize, direction);
       const padsTravelled = Math.abs(targetIdx - frogIdx);
       hopDur = hopDuration(padsTravelled);
       fromIdx = frogIdx;
@@ -50,13 +75,13 @@ export function mountSingle(root: HTMLElement) {
       try {
         frogImage = await loadFrogImageForP5(p);
       } catch {
-        console.warn('Failed to load frog image, using emoji fallback');
+        console.warn("Failed to load frog image, using emoji fallback");
         frogImage = null;
       }
 
       // Create UI elements first
-      const ui = document.createElement('div');
-      ui.id = 'ui';
+      const ui = document.createElement("div");
+      ui.id = "ui";
       ui.innerHTML = `
         <div class="hop-controls">
           <select id="hopSelect"></select>
@@ -68,7 +93,7 @@ export function mountSingle(root: HTMLElement) {
       `;
 
       // Add styles
-      const style = document.createElement('style');
+      const style = document.createElement("style");
       style.textContent = `
         #ui { 
           display: flex; 
@@ -128,67 +153,69 @@ export function mountSingle(root: HTMLElement) {
       // Now create canvas
       const canvasElem = p.createCanvas(canvas.w, canvas.h).elt;
       p.textSize(24);
+      ready = true;
 
       // Place belowSketch after the canvas
-      const belowSketch = document.createElement('div');
-      belowSketch.id = 'belowSketch';
+      const belowSketch = document.createElement("div");
+      belowSketch.id = "belowSketch";
       belowSketch.innerHTML = `
-        ${getFeatureFlag('showToggleLabelsButton') ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ''}
+        ${getFeatureFlag("showToggleLabelsButton") ? '<button id="toggleDebugBtn">Toggle Labels</button>' : ""}
         <button id="resetFrogBtn">Reset Frog</button>
       `;
 
       // Center all UI elements
-      const container = document.createElement('div');
+      const container = document.createElement("div");
       container.appendChild(ui);
       container.appendChild(style);
       container.appendChild(canvasElem);
       container.appendChild(belowSketch);
-      root.appendChild(createInstructionBanner('Meet the hoppers!'));
+      root.appendChild(createInstructionBanner("Meet the hoppers!"));
       root.appendChild(wrapCenteredContent(container));
 
       // Add hop button listeners
-      root.querySelector('#leftBtn')!
-        .addEventListener('click', () => {
-          if (p.millis() - hopStart >= hopDur) startHop(-1);
-        });
-      root.querySelector('#rightBtn')!
-        .addEventListener('click', () => {
-          if (p.millis() - hopStart >= hopDur) startHop(1);
-        });
+      root.querySelector("#leftBtn")!.addEventListener("click", () => {
+        if (!ready) return;
+        if (p.millis() - hopStart >= hopDur) startHop(-1);
+      });
+      root.querySelector("#rightBtn")!.addEventListener("click", () => {
+        if (!ready) return;
+        if (p.millis() - hopStart >= hopDur) startHop(1);
+      });
 
       // Add debug and reset button listeners
-      if (getFeatureFlag('showToggleLabelsButton')) {
-        root.querySelector('#toggleDebugBtn')!
-          .addEventListener('click', toggleDebug);
+      if (getFeatureFlag("showToggleLabelsButton")) {
+        root
+          .querySelector("#toggleDebugBtn")!
+          .addEventListener("click", toggleDebug);
       }
-      root.querySelector('#resetFrogBtn')!
-        .addEventListener('click', () => {
-          if (animating) return;
-          resetFrog(
-            frogIdx,
-            setFrogIdx,
-            setFromIdx,
-            setToIdx,
-            setHopStart,
-            setHopDur,
-            setAnimating,
-            () => p.millis()
-          );
-        });
+      root.querySelector("#resetFrogBtn")!.addEventListener("click", () => {
+        if (!ready) return;
+        if (animating) return;
+        resetFrog(
+          frogIdx,
+          setFrogIdx,
+          setFromIdx,
+          setToIdx,
+          setHopStart,
+          setHopDur,
+          setAnimating,
+          () => p.millis(),
+        );
+      });
 
-      const hopSel = root.querySelector('#hopSelect') as HTMLSelectElement;
+      const hopSel = root.querySelector("#hopSelect") as HTMLSelectElement;
 
       // Disable keyboard navigation on select element
-      hopSel.addEventListener('keydown', (e) => {
-        if (e.key.startsWith('Arrow')) {
+      hopSel.addEventListener("keydown", (e) => {
+        if (e.key.startsWith("Arrow")) {
           e.preventDefault();
         }
       });
 
       // generate options once
-      HOP_RANGE.forEach(n => {
-        const opt = document.createElement('option');
-        opt.value = n.toString();        // numeric value for code
+      HOP_RANGE.forEach((n) => {
+        const opt = document.createElement("option");
+        opt.value = n.toString(); // numeric value for code
         opt.textContent = `${n}-hopper`; // user‑facing label
         hopSel.appendChild(opt);
       });
@@ -196,30 +223,31 @@ export function mountSingle(root: HTMLElement) {
       // set initial selection to current hopSize
       hopSel.value = hopSize.toString();
 
-      hopSel.addEventListener('change', e => {
-        hopSize = +(e.target as HTMLSelectElement).value;   // value still numeric
+      hopSel.addEventListener("change", (e) => {
+        hopSize = +(e.target as HTMLSelectElement).value; // value still numeric
       });
 
       // Add keyboard controls
-      if (shouldEnableArrowKeys('single')) {
+      if (shouldEnableArrowKeys("single")) {
         keydownHandler = (e: KeyboardEvent) => {
+          if (!ready) return;
           if (p.millis() - hopStart < hopDur) return;
-          if (e.key === 'ArrowRight' || e.key === 'd') {
+          if (e.key === "ArrowRight" || e.key === "d") {
             e.preventDefault();
             e.stopPropagation();
             startHop(1);
           }
-          if (e.key === 'ArrowLeft' || e.key === 'a') {
+          if (e.key === "ArrowLeft" || e.key === "a") {
             e.preventDefault();
             e.stopPropagation();
             startHop(-1);
           }
-          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          if (e.key === "ArrowUp" || e.key === "ArrowDown") {
             e.preventDefault();
             e.stopPropagation();
           }
         };
-        window.addEventListener('keydown', keydownHandler, true);
+        window.addEventListener("keydown", keydownHandler, true);
       }
 
       // Animate frog intro from 0 to 0 (no sound)
@@ -232,13 +260,14 @@ export function mountSingle(root: HTMLElement) {
         setHopStart,
         setHopDur,
         () => p.millis(),
-        setAnimating
+        setAnimating,
       );
 
       // Clean up event listener when unmounting
       const observer = new MutationObserver(() => {
         if (!root.contains(ui)) {
-          if (keydownHandler) window.removeEventListener('keydown', keydownHandler);
+          if (keydownHandler)
+            window.removeEventListener("keydown", keydownHandler);
           observer.disconnect();
         }
       });
@@ -246,6 +275,7 @@ export function mountSingle(root: HTMLElement) {
     };
 
     p.draw = () => {
+      p.push();
       drawAnimationFrame({
         p,
         state: {
@@ -255,21 +285,21 @@ export function mountSingle(root: HTMLElement) {
           hopStart,
           hopDur,
           animating,
-          setAnimating
+          setAnimating,
         },
-        showAvailable: shouldDisplayAvailablePads('single'),
-        isReachable: (idx) => ((idx - frogIdx) % hopSize + hopSize) % hopSize === 0,
+        isReachable: (idx) =>
+          (((idx - frogIdx) % hopSize) + hopSize) % hopSize === 0,
         showBadge: (frogXw, frogY, camX) => {
           // Adjust badge position for the frog image - move it above the frog
           const badgeX = frogXw - camX;
-          const badgeY = frogY - 40; // Increased from -28 to move badge higher
-          
+          const badgeOffset = 40;
+          const badgeY = frogY - badgeOffset;
           // Draw badge circle
           p.fill(255);
           p.stroke(0);
           p.strokeWeight(1);
           p.circle(badgeX, badgeY, 20);
-          
+
           // Draw badge text with explicit alignment
           p.fill(0);
           p.noStroke();
@@ -278,10 +308,13 @@ export function mountSingle(root: HTMLElement) {
           p.text(hopSize.toString(), badgeX, badgeY);
         },
         debugMode,
-        frogImage
+        frogImage,
       });
+      p.pop();
     };
   }, root);
 }
 
-export const setHopSize = (n: number) => { hopSize = n; }; 
+export const setHopSize = (n: number) => {
+  hopSize = n;
+};

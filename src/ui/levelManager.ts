@@ -18,7 +18,7 @@ export class LevelManager {
     this.state = {
       currentLevelIndex: 0,
       levels,
-      completedLevels: new Set()
+      completedLevels: new Set(),
     };
   }
 

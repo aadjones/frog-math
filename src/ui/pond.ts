@@ -1,21 +1,26 @@
-import p5 from 'p5';
-import { playHopSound } from './shared';
-import { modIndex, hopDuration, MS_PER_PAD } from '../frogPhysics';
-import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
-import { loadFrogImageForP5, drawFrog } from './imageLoader';
+import p5 from "p5";
+import { playHopSound } from "./shared";
+import { modIndex, hopDuration, MS_PER_PAD } from "../frogPhysics";
+import {
+  addBackToMenu,
+  wrapCenteredContent,
+  createInstructionBanner,
+} from "./uiHelpers";
+import { loadFrogImageForP5, drawFrog } from "./imageLoader";
+import { drawLilyPad } from "./animation";
 
 export function mountPond(root: HTMLElement) {
-  root.innerHTML = '';
+  root.innerHTML = "";
   addBackToMenu(root);
-  root.appendChild(createInstructionBanner('Explore the pond!'));
+  root.appendChild(createInstructionBanner("Explore the pond!"));
 
-  const pondContent = document.createElement('div');
+  const pondContent = document.createElement("div");
   pondContent.innerHTML = `
     <div class="hop-controls" style="display:flex;flex-direction:column;align-items:center;">
       <div class="pond-selects" style="margin-bottom:18px;">
         <label>pads
           <select id="padSelect">
-            ${[8,9,10,11,12,13,20,24].map(n=>`<option>${n}</option>`).join('')}
+            ${[7, 8, 9, 10, 11, 12, 13].map((n) => `<option>${n}</option>`).join("")}
           </select>
         </label>
         <label>hopper
@@ -34,7 +39,7 @@ export function mountPond(root: HTMLElement) {
   `;
   root.appendChild(wrapCenteredContent(pondContent));
 
-  const padSel = pondContent.querySelector('#padSelect') as HTMLSelectElement;
+  const padSel = pondContent.querySelector("#padSelect") as HTMLSelectElement;
   let n = +padSel.value;
   let k = 3;
   let idx = 0;
@@ -44,10 +49,11 @@ export function mountPond(root: HTMLElement) {
   let hopDur = 0;
   let lastDir: 1 | -1 = 1;
   let zeroHopAnimating = false;
+  let ready = false;
 
-  const canvasDiv = pondContent.querySelector('#pondCanvas') as HTMLElement;
-  canvasDiv.style.marginTop = '32px';
-  const sketch = new p5(p => {
+  const canvasDiv = pondContent.querySelector("#pondCanvas") as HTMLElement;
+  canvasDiv.style.marginTop = "32px";
+  const sketch = new p5((p) => {
     let frogImage: p5.Image | null = null;
 
     p.setup = async () => {
@@ -55,71 +61,68 @@ export function mountPond(root: HTMLElement) {
       try {
         frogImage = await loadFrogImageForP5(p);
       } catch {
-        console.warn('Failed to load frog image, using emoji fallback');
+        console.warn("Failed to load frog image, using emoji fallback");
         frogImage = null;
       }
-
       p.createCanvas(400, 400);
+      ready = true;
     };
 
     p.draw = () => {
       p.background(255);
-      p.translate(p.width/2, p.height/2 + 20);
+      p.translate(p.width / 2, p.height / 2);
 
-      // draw pads
       const r = 120;
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * p.TWO_PI - p.HALF_PI;
-        const x = r * Math.cos(a);
-        const y = r * Math.sin(a);
-        p.fill(i === idx ? '#8f8' : '#ddd');
-        p.circle(x, y, 32);
-        p.fill(0);
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(14);
-        p.text(i.toString(), x, y);
-      }
-
-      // frog position (interpolated, always in hop direction)
       let frogAng;
-      let frogR;
-      const padRadius = 16;
-      const frogOffset = 7;
       if (zeroHopAnimating && hopDur > 0) {
         // Animate radial bounce for 0-hop
         frogAng = (idx / n) * p.TWO_PI - p.HALF_PI;
         // Use a sine wave for smooth out-and-back
         const progress = p.constrain((p.millis() - hopStart) / hopDur, 0, 1);
-        // Bounce out to +20px and back
-        const bounce = Math.sin(Math.PI * progress);
-        frogR = r + padRadius + frogOffset + 20 * bounce;
         if (progress === 1) zeroHopAnimating = false;
       } else if (hopDur === 0) {
         frogAng = (idx / n) * p.TWO_PI - p.HALF_PI;
-        frogR = r + padRadius + frogOffset;
       } else {
         const startAng = (fromIdx / n) * p.TWO_PI - p.HALF_PI;
         const endAng = startAng + lastDir * (k / n) * p.TWO_PI;
         const progress = p.constrain((p.millis() - hopStart) / hopDur, 0, 1);
         frogAng = p.lerp(startAng, endAng, progress);
-        frogR = r + padRadius + frogOffset;
       }
-      const fx = frogR * Math.cos(frogAng);
-      const fy = frogR * Math.sin(frogAng);
-      
-      // Determine frog direction based on movement direction
-      // For circular movement: clockwise (lastDir = 1) = facing right, counterclockwise (lastDir = -1) = facing left
-      const facingRight = lastDir === 1;
-      
-      // Draw frog using the new image-aware function
-      drawFrog(p, fx, fy, frogImage, 24, facingRight);
+      // Draw pads and numbers
+      for (let i = 0; i < n; i++) {
+        // Start at top (north, -PI/2)
+        const a = (i / n) * p.TWO_PI - Math.PI / 2;
+        const x = r * Math.cos(a);
+        const y = r * Math.sin(a);
+        // Notch faces inward (toward center)
+        const notchAngle = a + Math.PI;
+        drawLilyPad(p, x, y, 32, "#8f8", {
+          notchAngle,
+          notchSize: 1.8,
+          squish: false,
+        });
+        // Draw number label in the notch, always aligned with the notch
+        const labelRadius = 20; // distance from center of pad to label
+        const labelX = x + labelRadius * Math.cos(notchAngle);
+        const labelY = y + labelRadius * 0.8 * Math.sin(notchAngle);
+        p.fill(0);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(14);
+        p.text(i.toString(), labelX, labelY);
+      }
+      // Draw frog on the outside edge of the pad
+      const frogRadius = r + 32 / 2 + 8; // pad radius + offset
+      const fx = frogRadius * Math.cos(frogAng);
+      const fy = frogRadius * Math.sin(frogAng);
+      const frogSize = 48;
+      drawFrog(p, fx, fy, frogImage, frogSize, true);
 
       // Draw hopper number bubble with radial orientation
-      const bubbleOffset = 22;
-      const bubbleR = frogR + bubbleOffset;
+      const bubbleOffset = 0.75 * frogSize;
+      const bubbleR = frogRadius + bubbleOffset;
       const bubbleX = bubbleR * Math.cos(frogAng);
       const bubbleY = bubbleR * Math.sin(frogAng);
-      p.textSize(14);
+      p.textSize(18);
       p.fill(255);
       p.circle(bubbleX, bubbleY, 18);
       p.fill(0);
@@ -128,11 +131,11 @@ export function mountPond(root: HTMLElement) {
   }, canvasDiv);
 
   // populate hopSelect once pads known
-  const hopSel = pondContent.querySelector('#hopSelect') as HTMLSelectElement;
+  const hopSel = pondContent.querySelector("#hopSelect") as HTMLSelectElement;
   const rebuildHopOptions = () => {
-    hopSel.innerHTML = '';
+    hopSel.innerHTML = "";
     for (let i = 0; i < n; i++) {
-      const opt = document.createElement('option');
+      const opt = document.createElement("option");
       opt.value = i.toString();
       opt.textContent = `${i}-hopper`;
       hopSel.appendChild(opt);
@@ -180,9 +183,16 @@ export function mountPond(root: HTMLElement) {
     }
   }
 
-  pondContent.querySelector('#leftBtn')!.addEventListener('click', () => hop(-1));
-  pondContent.querySelector('#rightBtn')!.addEventListener('click', () => hop(1));
-  pondContent.querySelector('#resetFrogBtn')!.addEventListener('click', () => {
+  pondContent.querySelector("#leftBtn")!.addEventListener("click", () => {
+    if (!ready) return;
+    hop(-1);
+  });
+  pondContent.querySelector("#rightBtn")!.addEventListener("click", () => {
+    if (!ready) return;
+    hop(1);
+  });
+  pondContent.querySelector("#resetFrogBtn")!.addEventListener("click", () => {
+    if (!ready) return;
     idx = 0;
     fromIdx = 0;
     toIdx = 0;
@@ -196,26 +206,28 @@ export function mountPond(root: HTMLElement) {
   let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   function enableKeyboardControls() {
     keydownHandler = (e: KeyboardEvent) => {
-      if (hopDur !== 0 && (performance.now() - hopStart < hopDur)) return;
-      if (e.key === 'ArrowRight' || e.key === 'd') {
+      if (!ready) return;
+      if (hopDur !== 0 && performance.now() - hopStart < hopDur) return;
+      if (e.key === "ArrowRight" || e.key === "d") {
         e.preventDefault();
         hop(1);
       }
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
+      if (e.key === "ArrowLeft" || e.key === "a") {
         e.preventDefault();
         hop(-1);
       }
     };
-    window.addEventListener('keydown', keydownHandler, true);
+    window.addEventListener("keydown", keydownHandler, true);
   }
   enableKeyboardControls();
 
   // Clean up event listener when unmounting
   const observer = new MutationObserver(() => {
     if (!root.contains(pondContent)) {
-      if (keydownHandler) window.removeEventListener('keydown', keydownHandler, true);
+      if (keydownHandler)
+        window.removeEventListener("keydown", keydownHandler, true);
       observer.disconnect();
     }
   });
   observer.observe(root, { childList: true });
-} 
+}

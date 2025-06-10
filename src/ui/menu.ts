@@ -1,36 +1,39 @@
-export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'multi'|'pond'|'uberhopper')=>void){
-  container.innerHTML = '';
+export function mountMenu(
+  container: HTMLElement,
+  onSelect: (mode: "single" | "multi" | "pond" | "uberhopper") => void,
+) {
+  container.innerHTML = "";
 
   // Main wrapper
-  const wrapper = document.createElement('div');
-  wrapper.className = 'menu-wrapper';
+  const wrapper = document.createElement("div");
+  wrapper.className = "menu-wrapper";
 
   // Frog emoji splash
-  const frog = document.createElement('div');
-  frog.className = 'menu-logo';
-  frog.textContent = '🐸';
+  const frog = document.createElement("div");
+  frog.className = "menu-logo";
+  frog.textContent = "🐸";
   wrapper.appendChild(frog);
 
   // Title
-  const title = document.createElement('h1');
-  title.className = 'menu-title';
-  title.textContent = 'FrogMath';
+  const title = document.createElement("h1");
+  title.className = "menu-title";
+  title.textContent = "FrogMath";
   wrapper.appendChild(title);
 
   // Tagline
-  const tagline = document.createElement('div');
-  tagline.className = 'menu-tagline';
-  tagline.textContent = 'Leap into learning with every hop!';
+  const tagline = document.createElement("div");
+  tagline.className = "menu-tagline";
+  tagline.textContent = "Leap into learning with every hop!";
   wrapper.appendChild(tagline);
 
   // Mode cards container
-  const cards = document.createElement('div');
-  cards.className = 'menu-cards';
+  const cards = document.createElement("div");
+  cards.className = "menu-cards";
 
   // Single-hopper card
-  const singleCard = document.createElement('button');
-  singleCard.className = 'menu-card menu-card--single';
-  singleCard.id = 'singleBtn';
+  const singleCard = document.createElement("button");
+  singleCard.className = "menu-card menu-card--single";
+  singleCard.id = "singleBtn";
   singleCard.innerHTML = `
     <div class="menu-card-icon">🟢</div>
     <div class="menu-card-title">Single‑hopper</div>
@@ -39,9 +42,9 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   cards.appendChild(singleCard);
 
   // Multi-hopper card
-  const multiCard = document.createElement('button');
-  multiCard.className = 'menu-card menu-card--multi';
-  multiCard.id = 'multiBtn';
+  const multiCard = document.createElement("button");
+  multiCard.className = "menu-card menu-card--multi";
+  multiCard.id = "multiBtn";
   multiCard.innerHTML = `
     <div class="menu-card-icon">🟩🟩</div>
     <div class="menu-card-title">Multi‑hopper</div>
@@ -50,9 +53,9 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   cards.appendChild(multiCard);
 
   // Pond card
-  const pondCard = document.createElement('button');
-  pondCard.className = 'menu-card menu-card--pond';
-  pondCard.id = 'pondBtn';
+  const pondCard = document.createElement("button");
+  pondCard.className = "menu-card menu-card--pond";
+  pondCard.id = "pondBtn";
   pondCard.innerHTML = `
     <div class="menu-card-icon">⭕</div>
     <div class="menu-card-title">Pond</div>
@@ -61,9 +64,9 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   cards.appendChild(pondCard);
 
   // Uberhopper card
-  const uberhopperCard = document.createElement('button');
-  uberhopperCard.className = 'menu-card menu-card--uberhopper';
-  uberhopperCard.id = 'uberhopperBtn';
+  const uberhopperCard = document.createElement("button");
+  uberhopperCard.className = "menu-card menu-card--uberhopper";
+  uberhopperCard.id = "uberhopperBtn";
   uberhopperCard.innerHTML = `
     <div class="menu-card-icon">🔄</div>
     <div class="menu-card-title">Überhopper</div>
@@ -74,8 +77,8 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   wrapper.appendChild(cards);
 
   // Customer review / quote
-  const review = document.createElement('div');
-  review.className = 'menu-review';
+  const review = document.createElement("div");
+  review.className = "menu-review";
   review.innerHTML = `
     "My son Jeff never liked school until he started hopping with FrogMath. Now, he keeps muttering inscrutable things about flügenfröger."
     <span class="menu-review__author">— Helen Hashfield</span>
@@ -86,8 +89,8 @@ export function mountMenu(container: HTMLElement, onSelect: (mode:'single'|'mult
   container.appendChild(wrapper);
 
   // Wire up the buttons
-  singleCard.addEventListener('click', () => onSelect('single'));
-  multiCard.addEventListener('click', () => onSelect('multi'));
-  pondCard.addEventListener('click', () => onSelect('pond'));
-  uberhopperCard.addEventListener('click', () => onSelect('uberhopper'));
-} 
+  singleCard.addEventListener("click", () => onSelect("single"));
+  multiCard.addEventListener("click", () => onSelect("multi"));
+  pondCard.addEventListener("click", () => onSelect("pond"));
+  uberhopperCard.addEventListener("click", () => onSelect("uberhopper"));
+}

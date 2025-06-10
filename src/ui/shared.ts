@@ -1,4 +1,4 @@
-import { MS_PER_PAD, playbackRate } from '../frogPhysics';
+import { MS_PER_PAD, playbackRate } from "../frogPhysics";
 
 /* shared constants & helpers for all frog modes */
 export const gap = 60;
@@ -9,8 +9,10 @@ function getResponsiveCanvasWidth() {
 }
 
 export const canvas = {
-  get w() { return getResponsiveCanvasWidth(); },
-  h: 160
+  get w() {
+    return getResponsiveCanvasWidth();
+  },
+  h: 160,
 };
 
 /* World helpers */
@@ -18,7 +20,9 @@ export const worldX = (idx: number) => idx * gap;
 
 /* Debug state (shared) */
 export let debugMode = true; // Show numbers by default
-export function toggleDebug() { debugMode = !debugMode; }
+export function toggleDebug() {
+  debugMode = !debugMode;
+}
 
 /* Feature flags */
 export interface FeatureFlags {
@@ -27,20 +31,20 @@ export interface FeatureFlags {
 }
 
 const DEFAULT_FEATURES: FeatureFlags = {
-  showToggleLabelsButton: false
+  showToggleLabelsButton: false,
 };
 
 export const FEATURES: FeatureFlags = { ...DEFAULT_FEATURES };
 
 export function setFeatureFlag<K extends keyof FeatureFlags>(
   flag: K,
-  value: FeatureFlags[K]
+  value: FeatureFlags[K],
 ): void {
   FEATURES[flag] = value;
 }
 
 export function getFeatureFlag<K extends keyof FeatureFlags>(
-  flag: K
+  flag: K,
 ): FeatureFlags[K] {
   return FEATURES[flag];
 }
@@ -54,12 +58,12 @@ export function resetFrog(
   setHopStart: (n: number) => void,
   setHopDur?: (n: number) => void,
   setAnimating?: (b: boolean) => void,
-  sketchMillis?: () => number
+  sketchMillis?: () => number,
 ) {
   setFromIdx(frogIdx);
   setToIdx(0);
   setFrogIdx(0);
-  
+
   // Handle animation if animation parameters are provided
   if (setHopDur && setAnimating && sketchMillis) {
     setHopDur(MS_PER_PAD * Math.max(1, Math.abs(frogIdx)));
@@ -81,7 +85,7 @@ export function animateFrogIntro(
   setHopStart: (n: number) => void,
   setHopDur: (n: number) => void,
   sketchMillis: () => number,
-  setAnimating?: (b: boolean) => void
+  setAnimating?: (b: boolean) => void,
 ) {
   setFromIdx(fromIdx);
   setToIdx(toIdx);
@@ -95,33 +99,37 @@ export function animateFrogIntro(
 
 /* Audio */
 const audioCtx = new AudioContext();
-const samples = [new Audio(`${import.meta.env.BASE_URL}sounds/frog-math-hop.mp3`)];
-samples.forEach(a => (a.preload = 'auto'));
+const samples = [
+  new Audio(`${import.meta.env.BASE_URL}sounds/frog-math-hop.mp3`),
+];
+samples.forEach((a) => (a.preload = "auto"));
 
-const victorySample = new Audio(`${import.meta.env.BASE_URL}sounds/frog-victory.mp3`);
-victorySample.preload = 'auto';
+const victorySample = new Audio(
+  `${import.meta.env.BASE_URL}sounds/frog-victory.mp3`,
+);
+victorySample.preload = "auto";
 
 export function playHopSound(hopDur: number) {
   const clip = samples[0].cloneNode() as HTMLAudioElement;
   clip.playbackRate = playbackRate(hopDur);
   clip.volume = 0.7;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx.state === "suspended") audioCtx.resume();
   clip.play().catch(() => {});
 }
 
 export function playVictorySound() {
   const clip = victorySample.cloneNode() as HTMLAudioElement;
   clip.volume = 0.9;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx.state === "suspended") audioCtx.resume();
   clip.play().catch(() => {});
 }
 
 // Shared displayAvailablePads logic
-export function shouldDisplayAvailablePads(mode: 'single' | 'multi') {
-  return mode === 'single';
+export function shouldDisplayAvailablePads(mode: "single" | "multi") {
+  return mode === "single";
 }
 
 // Shared arrow key enable logic
-export function shouldEnableArrowKeys(mode: 'single' | 'multi') {
-  return mode === 'single';
-} 
+export function shouldEnableArrowKeys(mode: "single" | "multi") {
+  return mode === "single";
+}
