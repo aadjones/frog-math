@@ -5,19 +5,82 @@ import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './u
 import { drawAnimationFrame } from './animation';
 import { loadFrogImageForP5 } from './imageLoader';
 import { ConfettiSystem } from './confetti';
+import { createMultiHopperLevelManager } from './levelSets';
 import '../ui/sharedStyle.css';
 
 export function mountMulti(root: HTMLElement) {
   root.innerHTML = '';
   addBackToMenu(root);
 
+  // Initialize level manager
+  const levelManager = createMultiHopperLevelManager();
+
   // Add instruction banner directly to root, before wrapper
-  root.appendChild(createInstructionBanner('A 5-hopper and a 7-hopper had a baby. Try to get the baby to land on the fly! 🪰'));
+  const instructionBanner = createInstructionBanner(levelManager.getCurrentLevel().description);
+  root.appendChild(instructionBanner);
+
+  // Celebration modal
+  const modal = document.createElement('div');
+  modal.className = 'celebration-modal';
+  modal.style.display = 'none';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div id="modalMessage"></div>
+      <button id="modalBtn">Next Problem</button>
+    </div>
+  `;
+  root.appendChild(modal);
+
+  // Modal styles
+  const modalStyle = document.createElement('style');
+  modalStyle.textContent = `
+    .celebration-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .celebration-modal[style*='none'] { display: none !important; }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      padding: 32px 24px 24px 24px;
+      text-align: center;
+      min-width: 260px;
+      max-width: 90vw;
+    }
+    #modalMessage {
+      font-size: 1.3rem;
+      margin-bottom: 24px;
+    }
+    #modalBtn {
+      font-size: 1.1rem;
+      padding: 10px 28px;
+      border-radius: 8px;
+      border: none;
+      background: #8f8;
+      color: #222;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #modalBtn:hover {
+      background: #7ddc7d;
+    }
+  `;
+  document.head.appendChild(modalStyle);
 
   // Create a wrapper for the rest of the UI
   const wrapper = document.createElement('div');
   wrapper.innerHTML = `
     <div id="toolbar">
+      <div class="level-indicator">
+        <span id="levelInfo">Problem ${levelManager.getCurrentLevelIndex() + 1} of ${levelManager.getTotalLevels()}</span>
+      </div>
       <div class="hop-buttons">
         <button id="left5">← 5</button>
         <button id="left7">← 7</button>
@@ -31,16 +94,20 @@ export function mountMulti(root: HTMLElement) {
       <button id="resetFrogBtn">Reset Frog</button>
     </div>
   `;
-
-  // Add styles
-  const style = document.createElement('style');
-  style.textContent = `
+  wrapper.appendChild(document.createElement('style')).textContent = `
     #toolbar {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       width: 100%;
       padding: 0 10px;
       margin-bottom: 8px;
+      gap: 8px;
+    }
+    .level-indicator {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
     }
     .hop-buttons {
       display: flex;
@@ -75,12 +142,12 @@ export function mountMulti(root: HTMLElement) {
       max-width: 100%;
     }
   `;
-  wrapper.appendChild(style);
-
   root.appendChild(wrapCenteredContent(wrapper));
 
   const pond = wrapper.querySelector('#pond') as HTMLElement;
-  const target = 1; // Fly always starts on lilypad #1
+  const levelInfo = wrapper.querySelector('#levelInfo') as HTMLElement;
+  const modalMessage = modal.querySelector('#modalMessage') as HTMLElement;
+  const modalBtn = modal.querySelector('#modalBtn') as HTMLButtonElement;
 
   let frogIdx = 0;
   let hopStart = 0;
@@ -89,108 +156,196 @@ export function mountMulti(root: HTMLElement) {
   let toIdx   = 0;
   let animating = false;
   let hasWon = false;
+  let awaitingNext = false;
 
   // Initialize confetti system
   const confetti = new ConfettiSystem();
+
+  function updateLevelDisplay() {
+    const currentLevel = levelManager.getCurrentLevel();
+    levelInfo.textContent = `Problem ${levelManager.getCurrentLevelIndex() + 1} of ${levelManager.getTotalLevels()}`;
+    instructionBanner.textContent = currentLevel.description;
+  }
+
+  function resetForNewLevel() {
+    frogIdx = 0;
+    fromIdx = 0;
+    toIdx = 0;
+    animating = false;
+    hasWon = false;
+    awaitingNext = false;
+    updateLevelDisplay();
+  }
+
+  function showModal(message: string, btnText: string, onClick: () => void) {
+    modalMessage.textContent = message;
+    modalBtn.textContent = btnText;
+    modal.style.display = 'flex';
+    modalBtn.onclick = () => {
+      modal.style.display = 'none';
+      onClick();
+    };
+  }
+
+  // Final screen overlay
+  const finalScreen = document.createElement('div');
+  finalScreen.className = 'final-screen-overlay';
+  finalScreen.style.display = 'none';
+  finalScreen.innerHTML = `
+    <div class="final-content">
+      <div class="final-title">You finished all the problems! 🎉</div>
+      <div class="final-subtitle">Problems completed: 3/3</div>
+      <div class="final-buttons">
+        <button id="playAgainBtn">Play Again</button>
+        <button id="backToMenuBtn">Back to Menu</button>
+      </div>
+    </div>
+  `;
+  root.appendChild(finalScreen);
+
+  // Final screen styles
+  const finalScreenStyle = document.createElement('style');
+  finalScreenStyle.textContent = `
+    .final-screen-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .final-screen-overlay[style*='none'] { display: none !important; }
+    .final-content {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      padding: 40px 32px 32px 32px;
+      text-align: center;
+      min-width: 280px;
+      max-width: 90vw;
+    }
+    .final-title {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 18px;
+    }
+    .final-subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 32px;
+    }
+    .final-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+    #playAgainBtn, #backToMenuBtn {
+      font-size: 1.1rem;
+      padding: 10px 28px;
+      border-radius: 8px;
+      border: none;
+      background: #8f8;
+      color: #222;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #playAgainBtn:hover, #backToMenuBtn:hover {
+      background: #7ddc7d;
+    }
+  `;
+  document.head.appendChild(finalScreenStyle);
+
+  const playAgainBtn = finalScreen.querySelector('#playAgainBtn') as HTMLButtonElement;
+  const backToMenuBtn = finalScreen.querySelector('#backToMenuBtn') as HTMLButtonElement;
+
+  playAgainBtn.onclick = () => {
+    // Reset level manager and frog state
+    levelManager.goToLevel(0);
+    levelManager['state'].completedLevels.clear(); // Not ideal, but LevelManager has no public reset
+    resetForNewLevel();
+    finalScreen.style.display = 'none';
+  };
+  backToMenuBtn.onclick = () => {
+    finalScreen.style.display = 'none';
+    window.location.href = '/';
+  };
 
   // p5 sketch
   const sketch = new p5(p => {
     let frogImage: p5.Image | null = null;
 
     p.setup = async () => {
-      // Load frog image
       try {
         frogImage = await loadFrogImageForP5(p);
       } catch {
         console.warn('Failed to load frog image, using emoji fallback');
         frogImage = null;
       }
-
       p.createCanvas(canvas.w, canvas.h, p.P2D);
       p.textSize(24);
       p.textAlign(p.CENTER, p.CENTER);
       animateFrogIntro(
-        0, // fromIdx
-        0, // toIdx
-        setFrogIdx,
-        setFromIdx,
-        setToIdx,
-        setHopStart,
-        setHopDur,
-        () => sketch.millis(),
-        setAnimating
+        0, 0,
+        setFrogIdx, setFromIdx, setToIdx, setHopStart, setHopDur,
+        () => sketch.millis(), setAnimating
       );
     };
 
     p.draw = () => {
-      // Update confetti physics
       confetti.update();
-
       drawAnimationFrame({
         p,
-        state: {
-          frogIdx,
-          fromIdx,
-          toIdx,
-          hopStart,
-          hopDur,
-          animating,
-          setAnimating
-        },
+        state: { frogIdx, fromIdx, toIdx, hopStart, hopDur, animating, setAnimating },
         showAvailable: shouldDisplayAvailablePads('multi'),
         isReachable: (idx) => ((idx - frogIdx) % 5 === 0) || ((idx - frogIdx) % 7 === 0),
         showTarget: (idx, screenX) => {
-          if (idx === target) {
+          const currentLevel = levelManager.getCurrentLevel();
+          if (idx === currentLevel.target) {
             p.textAlign(p.CENTER, p.CENTER);
             p.textSize(24);
             p.text('🪰', screenX, canvas.h / 2);
           }
         },
         showBadge: (frogXw, frogY, camX) => {
-          // Position badges above the frog image with proper spacing
-          const badgeY = frogY - 40; // Same offset as single mode
+          const badgeY = frogY - 40;
           const badgeSpacing = 22;
           const leftBadgeX = frogXw - camX - badgeSpacing/2;
           const rightBadgeX = frogXw - camX + badgeSpacing/2;
-          
-          // Left badge (5)
-          p.fill(255);
-          p.stroke(0);
-          p.strokeWeight(1);
+          p.fill(255); p.stroke(0); p.strokeWeight(1);
           p.circle(leftBadgeX, badgeY, 20);
-          p.fill(0);
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(14);
+          p.fill(0); p.noStroke(); p.textAlign(p.CENTER, p.CENTER); p.textSize(14);
           p.text('5', leftBadgeX, badgeY);
-          
-          // Right badge (7)
-          p.fill(255);
-          p.stroke(0);
-          p.strokeWeight(1);
+          p.fill(255); p.stroke(0); p.strokeWeight(1);
           p.circle(rightBadgeX, badgeY, 20);
-          p.fill(0);
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(14);
+          p.fill(0); p.noStroke(); p.textAlign(p.CENTER, p.CENTER); p.textSize(14);
           p.text('7', rightBadgeX, badgeY);
         },
         debugMode,
         frogImage,
         onWin: () => {
-          if (frogIdx === target && !animating) {
+          const currentLevel = levelManager.getCurrentLevel();
+          if (frogIdx === currentLevel.target && !animating && !awaitingNext) {
             if (!hasWon) {
               playVictorySound();
               confetti.start();
               hasWon = true;
+              awaitingNext = true;
+              // Show final screen overlay directly for last problem
+              if (!levelManager.canGoToNextLevel()) {
+                finalScreen.style.display = 'flex';
+              } else {
+                showModal('Nice job! You got the fly!', 'Next Problem', () => {
+                  levelManager.advanceToNextLevel();
+                  resetForNewLevel();
+                });
+              }
             }
           } else {
             hasWon = false;
           }
         }
       });
-
-      // Draw confetti on top of everything
       confetti.draw(p);
     };
   }, pond);
@@ -200,13 +355,17 @@ export function mountMulti(root: HTMLElement) {
   function setToIdx(n: number) { toIdx = n; }
   function setHopStart(n: number) { hopStart = n; }
   function setHopDur(n: number) { hopDur = n; }
-  function setAnimating(b: boolean) { animating = b; }
+  function setAnimating(b: boolean) {
+    if (animating && !b) {
+      frogIdx = toIdx;
+    }
+    animating = b;
+  }
 
   function startHop(dist:number){
-    if (animating) return;
+    if (animating || awaitingNext) return;
     fromIdx = frogIdx;
     toIdx   = frogIdx + dist;
-    frogIdx = toIdx;
     hopDur  = MS_PER_PAD * Math.abs(dist);
     hopStart= sketch.millis();
     animating = true;
@@ -220,7 +379,7 @@ export function mountMulti(root: HTMLElement) {
 
   wrapper.querySelector('#toggleDebugBtn')?.addEventListener('click', () => toggleDebug());
   wrapper.querySelector('#resetFrogBtn')!.addEventListener('click', () => {
-    if (animating) return;
+    if (animating || awaitingNext) return;
     resetFrog(
       frogIdx,
       setFrogIdx,
