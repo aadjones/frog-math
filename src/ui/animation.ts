@@ -66,7 +66,7 @@ export function drawAnimationFrame({
 
   // Draw lily pads
   const padSize = 32;
-  const frogSize = 40;
+  const frogSize = 48;
   const start = Math.min(-10, frogIdx - 10);
   const end = frogIdx + 10;
   for (let i = start; i <= end; i++) {
@@ -96,9 +96,10 @@ export function drawAnimationFrame({
       p.textSize(24); // Reset text size
     }
   }
-  // Draw current pad last with light green
+  // Draw current pad last with reachable color if appropriate
   const currentPadX = worldX(frogIdx) - camX;
-  drawLilyPad(p, currentPadX, canvas.h / 2, padSize, "#8f8", {
+  const currentPadReachable = isReachable(frogIdx); // will always be true in single mode
+  drawLilyPad(p, currentPadX, canvas.h / 2, padSize, currentPadReachable ? "#4a4" : "#8f8", {
     notchAngle: -p.QUARTER_PI,
     squish: 0.9,
   });
@@ -116,7 +117,7 @@ export function drawAnimationFrame({
 
   // Draw badge if provided
   if (showBadge) {
-    showBadge(frogXw, frogY, camX);
+    showBadge(frogXw, frogY - frogSize / 7, camX);
   }
 
   // Handle win condition if provided
