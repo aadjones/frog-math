@@ -14,10 +14,19 @@ export function nextIndex(cur: number, hopSize: number, dir: 1 | -1): number {
 }
 
 // Frog arc helper
-export function frogYArc(alpha: number, baseY: number = 80, amplitude: number = 20): number {
+export function frogYArc(
+  alpha: number,
+  baseY: number = 80,
+  amplitude: number = 20,
+): number {
   return baseY - amplitude * Math.sin(alpha * Math.PI);
 }
 
-export function modIndex(cur: number, hop: number, n: number, dir: 1 | -1): number {
-  return ((cur + dir * hop) % n + n) % n;
-} 
+export function modIndex(
+  cur: number,
+  hop: number,
+  n: number,
+  dir: 1 | -1,
+): number {
+  return (((cur + dir * hop) % n) + n) % n;
+}

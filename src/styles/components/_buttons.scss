@@ -1,31 +1,31 @@
-@use '../base/variables' as *;
-@use '../utils/mixins' as *;
+@use "../base/variables" as *;
+@use "../utils/mixins" as *;
 
 // Base button styles
 button {
   // Reset properties
   background: #ffffff;
-  border: 2px solid map-get($colors, 'primary');
-  color: map-get($colors, 'primary');
+  border: 2px solid map-get($colors, "primary");
+  color: map-get($colors, "primary");
   padding: 8px 16px;
   cursor: pointer;
   font: inherit;
-  
+
   // Custom styling
-  font-family: 'Fredoka One', 'Comic Sans MS', system-ui, sans-serif;
+  font-family: "Fredoka One", "Comic Sans MS", system-ui, sans-serif;
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
+
   // Hover state
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    background: map-get($colors, 'primary');
+    background: map-get($colors, "primary");
     color: #ffffff;
   }
-  
+
   // Active state
   &:active {
     transform: translateY(1px);
@@ -44,11 +44,11 @@ button[class*="back"] {
   font-size: 0.9rem;
   padding: 6px 12px;
   background: transparent;
-  border-color: map-get($colors, 'primary-light');
-  color: map-get($colors, 'primary-light');
-  
+  border-color: map-get($colors, "primary-light");
+  color: map-get($colors, "primary-light");
+
   &:hover {
-    background: map-get($colors, 'primary-light');
+    background: map-get($colors, "primary-light");
     color: #ffffff;
   }
 }
@@ -59,20 +59,20 @@ button[id*="Btn"] {
   font-weight: bold;
   border-width: 2px;
   padding: 10px 20px;
-  
+
   &:hover {
-    background: map-get($colors, 'primary');
+    background: map-get($colors, "primary");
   }
 }
 
 // Utility buttons (like Toggle Labels, Reset)
-button[id*="toggle"], 
+button[id*="toggle"],
 button[id*="reset"] {
   background: #f5f5f5;
   border-color: #666;
   color: #444;
   font-size: 0.9rem;
-  
+
   &:hover {
     background: #666;
     border-color: #666;
@@ -81,14 +81,14 @@ button[id*="reset"] {
 }
 
 // Responsive adjustments
-@include respond-to('mobile') {
+@include respond-to("mobile") {
   button {
     padding: 6px 12px;
     font-size: 0.9rem;
   }
-  
+
   button[id*="Btn"] {
     min-width: 100px;
     padding: 8px 16px;
   }
-} 
+}

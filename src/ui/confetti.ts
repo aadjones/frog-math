@@ -1,5 +1,5 @@
-import p5 from 'p5';
-import { canvas } from './shared';
+import p5 from "p5";
+import { canvas } from "./shared";
 
 interface ConfettiParticle {
   x: number;
@@ -18,8 +18,17 @@ export class ConfettiSystem {
   private particles: ConfettiParticle[] = [];
   private active = false;
   private startTime = 0;
-  private duration = 1500; // 1.5 seconds 
-  private readonly colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
+  private duration = 1500; // 1.5 seconds
+  private readonly colors = [
+    "#ff6b6b",
+    "#4ecdc4",
+    "#45b7d1",
+    "#96ceb4",
+    "#feca57",
+    "#ff9ff3",
+    "#54a0ff",
+    "#5f27cd",
+  ];
 
   private createParticle(x: number, y: number): ConfettiParticle {
     return {
@@ -32,7 +41,7 @@ export class ConfettiSystem {
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.3,
       life: 0,
-      maxLife: Math.random() * 120 + 60
+      maxLife: Math.random() * 120 + 60,
     };
   }
 
@@ -40,7 +49,7 @@ export class ConfettiSystem {
     this.active = true;
     this.particles = [];
     this.startTime = Date.now();
-    
+
     // Create initial burst of confetti
     for (let i = 0; i < 50; i++) {
       const x = Math.random() * canvas.w;
@@ -57,7 +66,11 @@ export class ConfettiSystem {
     const shouldStopGenerating = elapsed > this.duration;
 
     // Add new particles occasionally (but stop after duration)
-    if (!shouldStopGenerating && Math.random() < 0.3 && this.particles.length < 100) {
+    if (
+      !shouldStopGenerating &&
+      Math.random() < 0.3 &&
+      this.particles.length < 100
+    ) {
       const x = Math.random() * canvas.w;
       this.particles.push(this.createParticle(x, -10));
     }
@@ -65,7 +78,7 @@ export class ConfettiSystem {
     // Update existing particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const particle = this.particles[i];
-      
+
       // Update physics
       particle.x += particle.vx;
       particle.y += particle.vy;
@@ -93,14 +106,14 @@ export class ConfettiSystem {
       p.push();
       p.translate(particle.x, particle.y);
       p.rotate(particle.rotation);
-      
+
       // Fade out over time
-      const alpha = Math.max(0, 1 - (particle.life / particle.maxLife));
+      const alpha = Math.max(0, 1 - particle.life / particle.maxLife);
       const color = p.color(particle.color);
       color.setAlpha(alpha * 255);
       p.fill(color);
       p.noStroke();
-      
+
       // Draw confetti piece (rectangle)
       p.rectMode(p.CENTER);
       p.rect(0, 0, particle.size, particle.size * 0.6);
@@ -112,4 +125,4 @@ export class ConfettiSystem {
   isActive(): boolean {
     return this.active || this.particles.length > 0;
   }
-} 
+}

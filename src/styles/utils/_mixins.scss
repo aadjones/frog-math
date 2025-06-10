@@ -1,4 +1,4 @@
-@use '../base/variables' as *;
+@use "../base/variables" as *;
 
 // Responsive breakpoint mixin
 @mixin respond-to($breakpoint) {
@@ -16,7 +16,7 @@
   align-items: $align;
   justify-content: $justify;
 
-  @include respond-to('mobile') {
+  @include respond-to("mobile") {
     flex-direction: if($direction == row, column, $direction);
   }
 }
@@ -25,17 +25,17 @@
 @mixin container {
   width: 100%;
   margin: 0 auto;
-  padding: map-get($spacing, 'md');
-  
-  @include respond-to('tablet') {
+  padding: map-get($spacing, "md");
+
+  @include respond-to("tablet") {
     max-width: 720px;
   }
-  
-  @include respond-to('desktop') {
+
+  @include respond-to("desktop") {
     max-width: 960px;
   }
-  
-  @include respond-to('wide') {
+
+  @include respond-to("wide") {
     max-width: 1200px;
   }
 }
@@ -44,25 +44,27 @@
 @mixin responsive-font($size-key) {
   @if map-has-key($font-sizes, $size-key) {
     font-size: map-get($font-sizes, $size-key);
-    
-    @if $size-key == 'display' {
-      @include respond-to('mobile') {
-        font-size: map-get($font-sizes, 'xxl');
+
+    @if $size-key == "display" {
+      @include respond-to("mobile") {
+        font-size: map-get($font-sizes, "xxl");
       }
     }
   }
 }
 
 // Card container
-@mixin card($padding: 'lg', $radius: 'lg') {
+@mixin card($padding: "lg", $radius: "lg") {
   padding: map-get($spacing, $padding);
   border-radius: map-get($border-radius, $radius);
-  background: map-get($colors, 'background');
-  box-shadow: map-get($shadows, 'sm');
-  transition: transform 0.2s, box-shadow 0.2s;
-  
+  background: map-get($colors, "background");
+  box-shadow: map-get($shadows, "sm");
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+
   &:hover {
     transform: translateY(-2px);
-    box-shadow: map-get($shadows, 'md');
+    box-shadow: map-get($shadows, "md");
   }
-} 
+}

@@ -1,22 +1,26 @@
-import p5 from 'p5';
-import { playHopSound } from './shared';
-import { modIndex, hopDuration, MS_PER_PAD } from '../frogPhysics';
-import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
-import { loadFrogImageForP5, drawFrog } from './imageLoader';
-import { drawLilyPad } from './animation';
+import p5 from "p5";
+import { playHopSound } from "./shared";
+import { modIndex, hopDuration, MS_PER_PAD } from "../frogPhysics";
+import {
+  addBackToMenu,
+  wrapCenteredContent,
+  createInstructionBanner,
+} from "./uiHelpers";
+import { loadFrogImageForP5, drawFrog } from "./imageLoader";
+import { drawLilyPad } from "./animation";
 
 export function mountPond(root: HTMLElement) {
-  root.innerHTML = '';
+  root.innerHTML = "";
   addBackToMenu(root);
-  root.appendChild(createInstructionBanner('Explore the pond!'));
+  root.appendChild(createInstructionBanner("Explore the pond!"));
 
-  const pondContent = document.createElement('div');
+  const pondContent = document.createElement("div");
   pondContent.innerHTML = `
     <div class="hop-controls" style="display:flex;flex-direction:column;align-items:center;">
       <div class="pond-selects" style="margin-bottom:18px;">
         <label>pads
           <select id="padSelect">
-            ${[7,8,9,10,11,12,13].map(n=>`<option>${n}</option>`).join('')}
+            ${[7, 8, 9, 10, 11, 12, 13].map((n) => `<option>${n}</option>`).join("")}
           </select>
         </label>
         <label>hopper
@@ -35,7 +39,7 @@ export function mountPond(root: HTMLElement) {
   `;
   root.appendChild(wrapCenteredContent(pondContent));
 
-  const padSel = pondContent.querySelector('#padSelect') as HTMLSelectElement;
+  const padSel = pondContent.querySelector("#padSelect") as HTMLSelectElement;
   let n = +padSel.value;
   let k = 3;
   let idx = 0;
@@ -45,10 +49,11 @@ export function mountPond(root: HTMLElement) {
   let hopDur = 0;
   let lastDir: 1 | -1 = 1;
   let zeroHopAnimating = false;
+  let ready = false;
 
-  const canvasDiv = pondContent.querySelector('#pondCanvas') as HTMLElement;
-  canvasDiv.style.marginTop = '32px';
-  const sketch = new p5(p => {
+  const canvasDiv = pondContent.querySelector("#pondCanvas") as HTMLElement;
+  canvasDiv.style.marginTop = "32px";
+  const sketch = new p5((p) => {
     let frogImage: p5.Image | null = null;
 
     p.setup = async () => {
@@ -56,16 +61,16 @@ export function mountPond(root: HTMLElement) {
       try {
         frogImage = await loadFrogImageForP5(p);
       } catch {
-        console.warn('Failed to load frog image, using emoji fallback');
+        console.warn("Failed to load frog image, using emoji fallback");
         frogImage = null;
       }
-
       p.createCanvas(400, 400);
+      ready = true;
     };
 
     p.draw = () => {
       p.background(255);
-      p.translate(p.width/2, p.height/2);
+      p.translate(p.width / 2, p.height / 2);
 
       const r = 120;
       let frogAng;
@@ -91,14 +96,11 @@ export function mountPond(root: HTMLElement) {
         const y = r * Math.sin(a);
         // Notch faces inward (toward center)
         const notchAngle = a + Math.PI;
-        drawLilyPad(
-          p,
-          x,
-          y,
-          32,
-          '#8f8',
-          { notchAngle, notchSize: 1.8, squish: false }
-        );
+        drawLilyPad(p, x, y, 32, "#8f8", {
+          notchAngle,
+          notchSize: 1.8,
+          squish: false,
+        });
         // Draw number label in the notch, always aligned with the notch
         const labelRadius = 20; // distance from center of pad to label
         const labelX = x + labelRadius * Math.cos(notchAngle);
@@ -129,11 +131,11 @@ export function mountPond(root: HTMLElement) {
   }, canvasDiv);
 
   // populate hopSelect once pads known
-  const hopSel = pondContent.querySelector('#hopSelect') as HTMLSelectElement;
+  const hopSel = pondContent.querySelector("#hopSelect") as HTMLSelectElement;
   const rebuildHopOptions = () => {
-    hopSel.innerHTML = '';
+    hopSel.innerHTML = "";
     for (let i = 0; i < n; i++) {
-      const opt = document.createElement('option');
+      const opt = document.createElement("option");
       opt.value = i.toString();
       opt.textContent = `${i}-hopper`;
       hopSel.appendChild(opt);
@@ -181,9 +183,16 @@ export function mountPond(root: HTMLElement) {
     }
   }
 
-  pondContent.querySelector('#leftBtn')!.addEventListener('click', () => hop(-1));
-  pondContent.querySelector('#rightBtn')!.addEventListener('click', () => hop(1));
-  pondContent.querySelector('#resetFrogBtn')!.addEventListener('click', () => {
+  pondContent.querySelector("#leftBtn")!.addEventListener("click", () => {
+    if (!ready) return;
+    hop(-1);
+  });
+  pondContent.querySelector("#rightBtn")!.addEventListener("click", () => {
+    if (!ready) return;
+    hop(1);
+  });
+  pondContent.querySelector("#resetFrogBtn")!.addEventListener("click", () => {
+    if (!ready) return;
     idx = 0;
     fromIdx = 0;
     toIdx = 0;
@@ -197,26 +206,28 @@ export function mountPond(root: HTMLElement) {
   let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   function enableKeyboardControls() {
     keydownHandler = (e: KeyboardEvent) => {
-      if (hopDur !== 0 && (performance.now() - hopStart < hopDur)) return;
-      if (e.key === 'ArrowRight' || e.key === 'd') {
+      if (!ready) return;
+      if (hopDur !== 0 && performance.now() - hopStart < hopDur) return;
+      if (e.key === "ArrowRight" || e.key === "d") {
         e.preventDefault();
         hop(1);
       }
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
+      if (e.key === "ArrowLeft" || e.key === "a") {
         e.preventDefault();
         hop(-1);
       }
     };
-    window.addEventListener('keydown', keydownHandler, true);
+    window.addEventListener("keydown", keydownHandler, true);
   }
   enableKeyboardControls();
 
   // Clean up event listener when unmounting
   const observer = new MutationObserver(() => {
     if (!root.contains(pondContent)) {
-      if (keydownHandler) window.removeEventListener('keydown', keydownHandler, true);
+      if (keydownHandler)
+        window.removeEventListener("keydown", keydownHandler, true);
       observer.disconnect();
     }
   });
   observer.observe(root, { childList: true });
-} 
+}

@@ -1,16 +1,20 @@
-import p5 from 'p5';
-import { playHopSound } from './shared';
-import { hopDuration, modIndex } from '../frogPhysics';
-import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
-import { loadUberhopperImageForP5, drawUberhopper } from './imageLoader';
-import { drawLilyPad } from './animation';
+import p5 from "p5";
+import { playHopSound } from "./shared";
+import { hopDuration, modIndex } from "../frogPhysics";
+import {
+  addBackToMenu,
+  wrapCenteredContent,
+  createInstructionBanner,
+} from "./uiHelpers";
+import { loadUberhopperImageForP5, drawUberhopper } from "./imageLoader";
+import { drawLilyPad } from "./animation";
 
 export function mountUberhopper(root: HTMLElement) {
-  root.innerHTML = '';
+  root.innerHTML = "";
   addBackToMenu(root);
-  root.appendChild(createInstructionBanner('Ever-increasing hops! 🚀'));
+  root.appendChild(createInstructionBanner("Ever-increasing hops! 🚀"));
 
-  const content = document.createElement('div');
+  const content = document.createElement("div");
   content.innerHTML = `
     <div class="hop-controls" style="display:flex;flex-direction:column;align-items:center;">
    
@@ -27,18 +31,19 @@ export function mountUberhopper(root: HTMLElement) {
 
   // Fixed number of pads
   const n = 13;
-  let hopNumber = 0;  // Tracks which hop we're on (starts at 0)
+  let hopNumber = 0; // Tracks which hop we're on (starts at 0)
   let idx = 0;
   let toIdx = 0;
   let hopStart = 0;
   let hopDur = 0;
-  let totalAngle = -Math.PI/2;  // Start at -90 degrees (top of circle)
-  let targetAngle = -Math.PI/2;  // The angle we're animating towards
+  let totalAngle = -Math.PI / 2; // Start at -90 degrees (top of circle)
+  let targetAngle = -Math.PI / 2; // The angle we're animating towards
   let isAnimating = false;
+  let ready = false;
 
-  const canvasDiv = content.querySelector('#pondCanvas') as HTMLElement;
-  canvasDiv.style.marginTop = '32px';
-  const sketch = new p5(p => {
+  const canvasDiv = content.querySelector("#pondCanvas") as HTMLElement;
+  canvasDiv.style.marginTop = "32px";
+  const sketch = new p5((p) => {
     let uberhopperImage: p5.Image | null = null;
 
     p.setup = async () => {
@@ -46,16 +51,16 @@ export function mountUberhopper(root: HTMLElement) {
       try {
         uberhopperImage = await loadUberhopperImageForP5(p);
       } catch {
-        console.warn('Failed to load uberhopper image, using emoji fallback');
+        console.warn("Failed to load uberhopper image, using emoji fallback");
         uberhopperImage = null;
       }
-
       p.createCanvas(400, 400);
+      ready = true;
     };
 
     p.draw = () => {
       p.background(255);
-      p.translate(p.width/2, p.height/2);
+      p.translate(p.width / 2, p.height / 2);
 
       // draw pads
       const r = 120;
@@ -65,14 +70,11 @@ export function mountUberhopper(root: HTMLElement) {
         const y = r * Math.sin(a);
         // Notch faces inward (toward center)
         const notchAngle = a + Math.PI;
-        drawLilyPad(
-          p,
-          x,
-          y,
-          32,
-          '#8f8',
-          { notchAngle, notchSize: 1.8, squish: false }
-        );
+        drawLilyPad(p, x, y, 32, "#8f8", {
+          notchAngle,
+          notchSize: 1.8,
+          squish: false,
+        });
         // Draw number label in the notch, always aligned with the notch
         const labelRadius = 20;
         const labelX = x + labelRadius * Math.cos(notchAngle);
@@ -88,7 +90,7 @@ export function mountUberhopper(root: HTMLElement) {
       let frogR;
       const padRadius = 16;
       const frogOffset = 7;
-      
+
       if (hopDur === 0) {
         frogAng = totalAngle;
         frogR = r + padRadius + frogOffset;
@@ -97,7 +99,7 @@ export function mountUberhopper(root: HTMLElement) {
         const progress = p.constrain((p.millis() - hopStart) / hopDur, 0, 1);
         frogAng = p.lerp(startAng, targetAngle, progress);
         if (progress === 1) {
-          totalAngle = targetAngle;  // Update total angle at end of hop
+          totalAngle = targetAngle; // Update total angle at end of hop
           isAnimating = false;
           hopDur = 0;
         }
@@ -105,7 +107,7 @@ export function mountUberhopper(root: HTMLElement) {
       }
       const fx = frogR * Math.cos(frogAng);
       const fy = frogR * Math.sin(frogAng);
-      
+
       // Draw uberhopper using the new image-aware function
       const frogSize = 80;
       drawUberhopper(p, fx, fy, uberhopperImage, frogSize);
@@ -119,41 +121,45 @@ export function mountUberhopper(root: HTMLElement) {
       p.fill(255);
       p.circle(bubbleX, bubbleY, 24);
       p.fill(0);
-      const currentHopSize = 2 * hopNumber + 1;  // 1,3,5,7,...
+      const currentHopSize = 2 * hopNumber + 1; // 1,3,5,7,...
       p.text(currentHopSize.toString(), bubbleX, bubbleY);
     };
   }, canvasDiv);
 
   function updateNextHopDisplay() {
-    const nextHopSize = 2 * hopNumber + 1;  // Current hop size: 1,3,5,7,...
-    const nextPad = modIndex(idx, nextHopSize, n, 1);  // Calculate next landing pad
-    const display = content.querySelector('#nextHopDisplay');
+    const nextHopSize = 2 * hopNumber + 1; // Current hop size: 1,3,5,7,...
+    const nextPad = modIndex(idx, nextHopSize, n, 1); // Calculate next landing pad
+    const display = content.querySelector("#nextHopDisplay");
     if (display) display.textContent = nextPad.toString();
   }
 
   function hop() {
     if (isAnimating) return;
-    
-    const hopSize = 2 * hopNumber + 1;  // 1,3,5,7,...
-    toIdx = modIndex(idx, hopSize, n, 1);  // Always hop clockwise (dir = 1)
+
+    const hopSize = 2 * hopNumber + 1; // 1,3,5,7,...
+    toIdx = modIndex(idx, hopSize, n, 1); // Always hop clockwise (dir = 1)
     idx = toIdx;
     hopDur = hopDuration(hopSize);
-    targetAngle = totalAngle + (hopSize / n) * (Math.PI * 2);  // Set new target angle
+    targetAngle = totalAngle + (hopSize / n) * (Math.PI * 2); // Set new target angle
     hopStart = sketch.millis();
     isAnimating = true;
     playHopSound(hopDur);
-    hopNumber++;  // Increment for next hop
+    hopNumber++; // Increment for next hop
     updateNextHopDisplay();
   }
 
-  content.querySelector('#rightBtn')!.addEventListener('click', () => hop());
-  content.querySelector('#resetFrogBtn')!.addEventListener('click', () => {
+  content.querySelector("#rightBtn")!.addEventListener("click", () => {
+    if (!ready) return;
+    hop();
+  });
+  content.querySelector("#resetFrogBtn")!.addEventListener("click", () => {
+    if (!ready) return;
     idx = 0;
     toIdx = 0;
     hopStart = 0;
     hopDur = 0;
     hopNumber = 0;
-    totalAngle = -Math.PI/2;  // Reset to starting angle
+    totalAngle = -Math.PI / 2; // Reset to starting angle
     updateNextHopDisplay();
   });
 
@@ -161,22 +167,24 @@ export function mountUberhopper(root: HTMLElement) {
   let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   function enableKeyboardControls() {
     keydownHandler = (e: KeyboardEvent) => {
-      if (hopDur !== 0 && (performance.now() - hopStart < hopDur)) return;
-      if (e.key === 'ArrowRight' || e.key === 'd') {
+      if (!ready) return;
+      if (hopDur !== 0 && performance.now() - hopStart < hopDur) return;
+      if (e.key === "ArrowRight" || e.key === "d") {
         e.preventDefault();
         hop();
       }
     };
-    window.addEventListener('keydown', keydownHandler, true);
+    window.addEventListener("keydown", keydownHandler, true);
   }
   enableKeyboardControls();
 
   // Clean up event listener when unmounting
   const observer = new MutationObserver(() => {
     if (!root.contains(content)) {
-      if (keydownHandler) window.removeEventListener('keydown', keydownHandler, true);
+      if (keydownHandler)
+        window.removeEventListener("keydown", keydownHandler, true);
       observer.disconnect();
     }
   });
   observer.observe(root, { childList: true });
-} 
+}

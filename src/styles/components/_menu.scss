@@ -1,51 +1,51 @@
-@use '../base/variables' as *;
-@use '../utils/mixins' as *;
+@use "../base/variables" as *;
+@use "../utils/mixins" as *;
 
 .menu-wrapper {
   @include flex-container(column);
   min-height: 100vh;
   background: linear-gradient(135deg, #e0ffe7 0%, #b3e5fc 100%);
-  padding: map-get($spacing, 'xl') map-get($spacing, 'md');
+  padding: map-get($spacing, "xl") map-get($spacing, "md");
   width: 100%;
-  
-  @include respond-to('mobile') {
-    padding: map-get($spacing, 'lg') map-get($spacing, 'sm');
+
+  @include respond-to("mobile") {
+    padding: map-get($spacing, "lg") map-get($spacing, "sm");
   }
 }
 
 .menu-logo {
   font-size: 96px; // Specific size for the emoji
-  margin-bottom: map-get($spacing, 'sm');
+  margin-bottom: map-get($spacing, "sm");
   line-height: 1;
-  
-  @include respond-to('mobile') {
+
+  @include respond-to("mobile") {
     font-size: 72px;
   }
 }
 
 .menu-title {
-  font-family: 'Fredoka One', 'Comic Sans MS', sans-serif;
+  font-family: "Fredoka One", "Comic Sans MS", sans-serif;
   font-size: 3rem;
   letter-spacing: 2px;
-  color: map-get($colors, 'primary');
-  margin: 0 0 map-get($spacing, 'sm') 0;
+  color: map-get($colors, "primary");
+  margin: 0 0 map-get($spacing, "sm") 0;
   text-align: center;
-  
-  @include respond-to('mobile') {
+
+  @include respond-to("mobile") {
     font-size: 2.5rem;
   }
 }
 
 .menu-tagline {
   font-size: 1.3rem;
-  color: map-get($colors, 'primary-light');
-  margin-bottom: map-get($spacing, 'xl');
+  color: map-get($colors, "primary-light");
+  margin-bottom: map-get($spacing, "xl");
   font-weight: bold;
   text-align: center;
-  
-  @include respond-to('mobile') {
+
+  @include respond-to("mobile") {
     font-size: 1.1rem;
-    margin-bottom: map-get($spacing, 'lg');
+    margin-bottom: map-get($spacing, "lg");
   }
 }
 
@@ -59,11 +59,11 @@
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  padding: 0 map-get($spacing, 'md');
-  
-  @media (max-width: map-get($breakpoints, 'tablet')) {
+  padding: 0 map-get($spacing, "md");
+
+  @media (max-width: map-get($breakpoints, "tablet")) {
     grid-template-columns: 1fr;
-    gap: map-get($spacing, 'md');
+    gap: map-get($spacing, "md");
   }
 }
 
@@ -75,49 +75,51 @@
   cursor: pointer;
   text-align: center;
   min-width: 200px;
-  transition: transform 0.1s, box-shadow 0.1s;
-  
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+
   &:hover {
     transform: scale(1.05);
   }
-  
+
   &--single {
-    border: 2px solid map-get($colors, 'primary');
-    box-shadow: 0 4px 16px rgba(44, 167, 80, 0.10);
-    
+    border: 2px solid map-get($colors, "primary");
+    box-shadow: 0 4px 16px rgba(44, 167, 80, 0.1);
+
     &:hover {
       box-shadow: 0 8px 24px rgba(44, 167, 80, 0.18);
     }
   }
-  
+
   &--multi {
-    border: 2px solid map-get($colors, 'secondary');
-    box-shadow: 0 4px 16px rgba(2, 136, 209, 0.10);
-    
+    border: 2px solid map-get($colors, "secondary");
+    box-shadow: 0 4px 16px rgba(2, 136, 209, 0.1);
+
     &:hover {
       box-shadow: 0 8px 24px rgba(2, 136, 209, 0.18);
     }
   }
-  
+
   &--pond {
-    border: 2px solid map-get($colors, 'tertiary');
-    box-shadow: 0 4px 16px rgba(156, 39, 176, 0.10);
-    
+    border: 2px solid map-get($colors, "tertiary");
+    box-shadow: 0 4px 16px rgba(156, 39, 176, 0.1);
+
     &:hover {
       box-shadow: 0 8px 24px rgba(156, 39, 176, 0.18);
     }
   }
-  
+
   &--uberhopper {
     border: 2px solid #ff6b6b;
-    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.10);
-    
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.1);
+
     &:hover {
       box-shadow: 0 8px 24px rgba(255, 107, 107, 0.18);
     }
   }
-  
-  @include respond-to('mobile') {
+
+  @include respond-to("mobile") {
     width: 100%;
     min-width: unset;
     padding: 24px 28px;
@@ -126,32 +128,32 @@
 
 .menu-card-icon {
   font-size: 2rem;
-  margin-bottom: map-get($spacing, 'xs');
+  margin-bottom: map-get($spacing, "xs");
 }
 
 .menu-card-title {
   font-weight: bold;
-  margin-bottom: map-get($spacing, 'xs');
+  margin-bottom: map-get($spacing, "xs");
 }
 
 .menu-card-subtitle {
   font-size: 1rem;
-  color: map-get($colors, 'text-light');
+  color: map-get($colors, "text-light");
 }
 
 .menu-review {
   font-size: 1.1rem;
   font-style: italic;
-  color: map-get($colors, 'text');
+  color: map-get($colors, "text");
   max-width: 420px;
   text-align: center;
-  padding: 0 map-get($spacing, 'md');
+  padding: 0 map-get($spacing, "md");
   margin: 0 auto;
-  
+
   &__author {
     display: block;
-    margin-top: map-get($spacing, 'xs');
+    margin-top: map-get($spacing, "xs");
     font-size: 0.95em;
-    color: map-get($colors, 'primary-light');
+    color: map-get($colors, "primary-light");
   }
-} 
+}
