@@ -3,6 +3,7 @@ import { playHopSound } from './shared';
 import { modIndex, hopDuration, MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { loadFrogImageForP5, drawFrog } from './imageLoader';
+import { drawLilyPad } from './animation';
 
 export function mountPond(root: HTMLElement) {
   root.innerHTML = '';
@@ -15,7 +16,7 @@ export function mountPond(root: HTMLElement) {
       <div class="pond-selects" style="margin-bottom:18px;">
         <label>pads
           <select id="padSelect">
-            ${[8,9,10,11,12,13,20,24].map(n=>`<option>${n}</option>`).join('')}
+            ${[7,8,9,10,11,12,13].map(n=>`<option>${n}</option>`).join('')}
           </select>
         </label>
         <label>hopper
@@ -64,62 +65,62 @@ export function mountPond(root: HTMLElement) {
 
     p.draw = () => {
       p.background(255);
-      p.translate(p.width/2, p.height/2 + 20);
+      p.translate(p.width/2, p.height/2);
 
-      // draw pads
       const r = 120;
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * p.TWO_PI - p.HALF_PI;
-        const x = r * Math.cos(a);
-        const y = r * Math.sin(a);
-        p.fill(i === idx ? '#8f8' : '#ddd');
-        p.circle(x, y, 32);
-        p.fill(0);
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(14);
-        p.text(i.toString(), x, y);
-      }
-
-      // frog position (interpolated, always in hop direction)
       let frogAng;
-      let frogR;
-      const padRadius = 16;
-      const frogOffset = 7;
       if (zeroHopAnimating && hopDur > 0) {
         // Animate radial bounce for 0-hop
         frogAng = (idx / n) * p.TWO_PI - p.HALF_PI;
         // Use a sine wave for smooth out-and-back
         const progress = p.constrain((p.millis() - hopStart) / hopDur, 0, 1);
-        // Bounce out to +20px and back
-        const bounce = Math.sin(Math.PI * progress);
-        frogR = r + padRadius + frogOffset + 20 * bounce;
         if (progress === 1) zeroHopAnimating = false;
       } else if (hopDur === 0) {
         frogAng = (idx / n) * p.TWO_PI - p.HALF_PI;
-        frogR = r + padRadius + frogOffset;
       } else {
         const startAng = (fromIdx / n) * p.TWO_PI - p.HALF_PI;
         const endAng = startAng + lastDir * (k / n) * p.TWO_PI;
         const progress = p.constrain((p.millis() - hopStart) / hopDur, 0, 1);
         frogAng = p.lerp(startAng, endAng, progress);
-        frogR = r + padRadius + frogOffset;
       }
-      const fx = frogR * Math.cos(frogAng);
-      const fy = frogR * Math.sin(frogAng);
-      
-      // Determine frog direction based on movement direction
-      // For circular movement: clockwise (lastDir = 1) = facing right, counterclockwise (lastDir = -1) = facing left
-      const facingRight = lastDir === 1;
-      
-      // Draw frog using the new image-aware function
-      drawFrog(p, fx, fy, frogImage, 24, facingRight);
+      // Draw pads and numbers
+      for (let i = 0; i < n; i++) {
+        // Start at top (north, -PI/2)
+        const a = (i / n) * p.TWO_PI - Math.PI / 2;
+        const x = r * Math.cos(a);
+        const y = r * Math.sin(a);
+        // Notch faces inward (toward center)
+        const notchAngle = a + Math.PI;
+        drawLilyPad(
+          p,
+          x,
+          y,
+          32,
+          '#8f8',
+          { notchAngle, notchSize: 1.8, squish: false }
+        );
+        // Draw number label in the notch, always aligned with the notch
+        const labelRadius = 20; // distance from center of pad to label
+        const labelX = x + labelRadius * Math.cos(notchAngle);
+        const labelY = y + labelRadius * 0.8 * Math.sin(notchAngle);
+        p.fill(0);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(14);
+        p.text(i.toString(), labelX, labelY);
+      }
+      // Draw frog on the outside edge of the pad
+      const frogRadius = r + 32 / 2 + 8; // pad radius + offset
+      const fx = frogRadius * Math.cos(frogAng);
+      const fy = frogRadius * Math.sin(frogAng);
+      const frogSize = 48;
+      drawFrog(p, fx, fy, frogImage, frogSize, true);
 
       // Draw hopper number bubble with radial orientation
-      const bubbleOffset = 22;
-      const bubbleR = frogR + bubbleOffset;
+      const bubbleOffset = 0.75 * frogSize;
+      const bubbleR = frogRadius + bubbleOffset;
       const bubbleX = bubbleR * Math.cos(frogAng);
       const bubbleY = bubbleR * Math.sin(frogAng);
-      p.textSize(14);
+      p.textSize(18);
       p.fill(255);
       p.circle(bubbleX, bubbleY, 18);
       p.fill(0);

@@ -1,6 +1,6 @@
 /// <reference types="p5/global" />
 import p5 from 'p5';
-import { canvas, playHopSound, shouldDisplayAvailablePads, shouldEnableArrowKeys, debugMode, toggleDebug, getFeatureFlag } from './shared';
+import { canvas, playHopSound, shouldEnableArrowKeys, debugMode, toggleDebug, getFeatureFlag } from './shared';
 import { MS_PER_PAD, hopDuration, nextIndex } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { resetFrog, animateFrogIntro } from './shared';
@@ -257,13 +257,12 @@ export function mountSingle(root: HTMLElement) {
           animating,
           setAnimating
         },
-        showAvailable: shouldDisplayAvailablePads('single'),
         isReachable: (idx) => ((idx - frogIdx) % hopSize + hopSize) % hopSize === 0,
         showBadge: (frogXw, frogY, camX) => {
           // Adjust badge position for the frog image - move it above the frog
           const badgeX = frogXw - camX;
-          const badgeY = frogY - 40; // Increased from -28 to move badge higher
-          
+          const badgeOffset = 40;
+          const badgeY = frogY - badgeOffset; 
           // Draw badge circle
           p.fill(255);
           p.stroke(0);

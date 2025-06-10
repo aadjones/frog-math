@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { canvas, playHopSound, debugMode, toggleDebug, resetFrog, animateFrogIntro, shouldDisplayAvailablePads, playVictorySound, getFeatureFlag } from './shared';
+import { canvas, playHopSound, debugMode, toggleDebug, resetFrog, animateFrogIntro, playVictorySound, getFeatureFlag } from './shared';
 import { MS_PER_PAD } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { drawAnimationFrame } from './animation';
@@ -297,7 +297,6 @@ export function mountMulti(root: HTMLElement) {
       drawAnimationFrame({
         p,
         state: { frogIdx, fromIdx, toIdx, hopStart, hopDur, animating, setAnimating },
-        showAvailable: shouldDisplayAvailablePads('multi'),
         isReachable: (idx) => ((idx - frogIdx) % 5 === 0) || ((idx - frogIdx) % 7 === 0),
         showTarget: (idx, screenX) => {
           const currentLevel = levelManager.getCurrentLevel();

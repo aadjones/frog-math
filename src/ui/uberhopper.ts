@@ -3,6 +3,7 @@ import { playHopSound } from './shared';
 import { hopDuration, modIndex } from '../frogPhysics';
 import { addBackToMenu, wrapCenteredContent, createInstructionBanner } from './uiHelpers';
 import { loadUberhopperImageForP5, drawUberhopper } from './imageLoader';
+import { drawLilyPad } from './animation';
 
 export function mountUberhopper(root: HTMLElement) {
   root.innerHTML = '';
@@ -54,7 +55,7 @@ export function mountUberhopper(root: HTMLElement) {
 
     p.draw = () => {
       p.background(255);
-      p.translate(p.width/2, p.height/2 + 20);
+      p.translate(p.width/2, p.height/2);
 
       // draw pads
       const r = 120;
@@ -62,12 +63,24 @@ export function mountUberhopper(root: HTMLElement) {
         const a = (i / n) * p.TWO_PI - p.HALF_PI;
         const x = r * Math.cos(a);
         const y = r * Math.sin(a);
-        p.fill(i === idx ? '#8f8' : '#ddd');
-        p.circle(x, y, 32);
+        // Notch faces inward (toward center)
+        const notchAngle = a + Math.PI;
+        drawLilyPad(
+          p,
+          x,
+          y,
+          32,
+          '#8f8',
+          { notchAngle, notchSize: 1.8, squish: false }
+        );
+        // Draw number label in the notch, always aligned with the notch
+        const labelRadius = 20;
+        const labelX = x + labelRadius * Math.cos(notchAngle);
+        const labelY = y + labelRadius * Math.sin(notchAngle);
         p.fill(0);
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(14);
-        p.text(i.toString(), x, y);
+        p.text(i.toString(), labelX, labelY);
       }
 
       // frog position (interpolated)
@@ -94,16 +107,17 @@ export function mountUberhopper(root: HTMLElement) {
       const fy = frogR * Math.sin(frogAng);
       
       // Draw uberhopper using the new image-aware function
-      drawUberhopper(p, fx, fy, uberhopperImage, 24);
+      const frogSize = 80;
+      drawUberhopper(p, fx, fy, uberhopperImage, frogSize);
 
       // Draw hopper number bubble with radial orientation
-      const bubbleOffset = 22;
+      const bubbleOffset = frogSize * 0.5;
       const bubbleR = frogR + bubbleOffset;
       const bubbleX = bubbleR * Math.cos(frogAng);
       const bubbleY = bubbleR * Math.sin(frogAng);
-      p.textSize(14);
+      p.textSize(18);
       p.fill(255);
-      p.circle(bubbleX, bubbleY, 18);
+      p.circle(bubbleX, bubbleY, 24);
       p.fill(0);
       const currentHopSize = 2 * hopNumber + 1;  // 1,3,5,7,...
       p.text(currentHopSize.toString(), bubbleX, bubbleY);

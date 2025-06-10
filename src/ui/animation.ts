@@ -16,7 +16,6 @@ export interface AnimationState {
 export interface DrawOptions {
   p: p5;
   state: AnimationState;
-  showAvailable: boolean;
   isReachable: (idx: number) => boolean;
   showTarget?: (idx: number, screenX: number) => void;
   showBadge?: (frogXw: number, frogY: number, camX: number) => void;
@@ -28,7 +27,6 @@ export interface DrawOptions {
 export function drawAnimationFrame({
   p,
   state,
-  showAvailable,
   isReachable,
   showTarget,
   showBadge,
@@ -63,50 +61,51 @@ export function drawAnimationFrame({
   p.background(255);
 
   // Draw lily pads
+  const padSize = 32;
+  const frogSize = 40;
   const start = Math.min(-10, frogIdx - 10);
   const end = frogIdx + 10;
   for (let i = start; i <= end; i++) {
     const screenX = worldX(i) - camX;
-    
     // Skip current pad - we'll draw it last
     if (i === frogIdx) continue;
-
     // Draw pad
     const reachable = isReachable(i);
-    p.fill(showAvailable && reachable ? '#8f8' : '#ddd');
-    p.circle(screenX, canvas.h / 2, 24);
-
+    drawLilyPad(
+      p,
+      screenX,
+      canvas.h / 2,
+      padSize,
+      reachable ? '#4a4' : '#8f8',
+      { notchAngle: -p.QUARTER_PI, squish: 0.9 }
+    );
     // Draw target if provided
     if (showTarget) {
       showTarget(i, screenX);
     }
-
     // Draw debug labels if enabled
     if (debugMode) {
       p.fill(0);
       p.textSize(12);
       p.textAlign(p.CENTER, p.TOP);
-      p.text(i.toString(), screenX, canvas.h / 2 + 30);
+      p.text(i.toString(), screenX, canvas.h / 2 + padSize / 2 + 6);
       p.textSize(24); // Reset text size
     }
   }
-
-  // Draw current pad last with darker green
+  // Draw current pad last with light green
   const currentPadX = worldX(frogIdx) - camX;
-  p.fill('#4a4');
-  p.circle(currentPadX, canvas.h / 2, 24);
-
+  drawLilyPad(p, currentPadX, canvas.h / 2, padSize, '#8f8', { notchAngle: -p.QUARTER_PI, squish: 0.9 });
+  // Draw frog using the new image-aware function at correct arc position
+  const OFFSET = 10;
+  drawFrog(p, frogXw - camX, frogY - OFFSET, frogImage, frogSize, facingRight);
   // Draw debug label for current pad if enabled
   if (debugMode) {
     p.fill(0);
     p.textSize(12);
     p.textAlign(p.CENTER, p.TOP);
-    p.text(frogIdx.toString(), currentPadX, canvas.h / 2 + 30);
+    p.text(frogIdx.toString(), currentPadX, canvas.h / 2 + padSize / 2 + 6);
     p.textSize(24); // Reset text size
   }
-
-  // Draw frog using the new image-aware function
-  drawFrog(p, frogXw - camX, frogY - 12, frogImage, 32, facingRight);
 
   // Draw badge if provided
   if (showBadge) {
@@ -117,4 +116,45 @@ export function drawAnimationFrame({
   if (onWin) {
     onWin(frogXw, camX);
   }
+}
+
+// Draw a cartoon lily pad as a section of an ellipse with a notch and outline only
+export function drawLilyPad(
+  p: p5,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+  options: { notchAngle?: number; notchSize?: number; squish?: number | false } = {}
+) {
+  const notchAngle = options.notchAngle ?? 0;
+  const notchSize  = options.notchSize  ?? 1;
+  const notchSpan  = p.QUARTER_PI * notchSize;    // how wide the notch is
+  const halfSpan   = notchSpan / 2;
+  const w = size, h = size;
+
+  p.push();
+    // move to pad center
+    p.translate(x, y);
+
+    // rotate so that 0 rad in local coords is your notch direction
+    p.rotate(notchAngle);
+
+    // squash into an ellipse unless squish is false
+    if (options.squish === false) {
+      // no squish
+    } else if (typeof options.squish === 'number') {
+      p.scale(1, options.squish);
+    } else {
+      p.scale(1, 0.8);
+    }
+
+    // draw the ellipse-minus-wedge via an ARC
+    p.stroke(40, 80, 30);
+    p.strokeWeight(4);
+    p.fill(color);
+
+    // draw the sector from halfSpan to TWO_PI-halfSpan, leaving a notch at 0 rad
+    p.arc(0, 0, w, h, halfSpan, p.TWO_PI - halfSpan, p.PIE);
+  p.pop();
 } 
