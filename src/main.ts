@@ -16,5 +16,8 @@ mountMenu(root, async (mode) => {
   } else if (mode === "uberhopper") {
     const { mountUberhopper } = await import("./ui/uberhopper");
     mountUberhopper(root);
+  } else if (mode === "concepts") {
+    const { mountConcepts } = await import("./ui/concepts");
+    mountConcepts(root);
   }
 });

@@ -1,0 +1,232 @@
+@use "../base/variables" as *;
+@use "../utils/mixins" as *;
+
+.concepts-wrapper {
+  @include flex-container(column);
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0ffe7 0%, #b3e5fc 100%);
+  padding: map-get($spacing, "xl") map-get($spacing, "md");
+  width: 100%;
+
+  @include respond-to("mobile") {
+    padding: map-get($spacing, "lg") map-get($spacing, "sm");
+  }
+}
+
+.concepts-header {
+  text-align: center;
+  margin-bottom: map-get($spacing, "xl");
+  position: relative;
+}
+
+.concepts-back-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid map-get($colors, "primary");
+  color: map-get($colors, "primary");
+  padding: map-get($spacing, "sm") map-get($spacing, "md");
+  border-radius: map-get($border-radius, "md");
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: map-get($colors, "primary");
+    color: white;
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  @include respond-to("mobile") {
+    position: static;
+    transform: none;
+    margin-bottom: map-get($spacing, "md");
+    display: inline-block;
+  }
+}
+
+.concepts-title {
+  font-family: "Fredoka One", "Comic Sans MS", sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  color: map-get($colors, "primary");
+  margin: 0 0 map-get($spacing, "sm") 0;
+
+  @include respond-to("mobile") {
+    font-size: 2rem;
+  }
+}
+
+.concepts-subtitle {
+  font-size: 1.2rem;
+  color: map-get($colors, "primary-light");
+  margin: 0;
+  font-weight: bold;
+
+  @include respond-to("mobile") {
+    font-size: 1rem;
+  }
+}
+
+.concepts-table-container {
+  background: white;
+  border-radius: map-get($border-radius, "lg");
+  box-shadow: map-get($shadows, "md");
+  overflow: hidden;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.concepts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+
+  @include respond-to("mobile") {
+    font-size: 0.9rem;
+  }
+}
+
+.concepts-table-header {
+  background: linear-gradient(
+    135deg,
+    map-get($colors, "primary") 0%,
+    map-get($colors, "primary-light") 100%
+  );
+  color: white;
+  padding: map-get($spacing, "lg");
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  border: none;
+
+  @include respond-to("mobile") {
+    padding: map-get($spacing, "md");
+    font-size: 1rem;
+  }
+
+  &--frog {
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  &--standard {
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+.concepts-category-row {
+  background: #f8f9fa;
+}
+
+.concepts-category-header {
+  background: #e9ecef;
+  color: map-get($colors, "text");
+  padding: map-get($spacing, "md");
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid #dee2e6;
+
+  @include respond-to("mobile") {
+    padding: map-get($spacing, "sm");
+    font-size: 1rem;
+  }
+}
+
+.concepts-concept-row {
+  border-bottom: 1px solid #dee2e6;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.concepts-cell {
+  padding: map-get($spacing, "lg");
+  vertical-align: top;
+  width: 50%;
+
+  @include respond-to("mobile") {
+    padding: map-get($spacing, "md");
+  }
+
+  &--frog {
+    border-right: 1px solid #dee2e6;
+    background: rgba(46, 125, 50, 0.02);
+  }
+
+  &--standard {
+    border-left: 1px solid #dee2e6;
+    background: rgba(2, 136, 209, 0.02);
+  }
+}
+
+.concept-content {
+  &--frog {
+    .concept-title {
+      color: map-get($colors, "primary");
+    }
+  }
+
+  &--standard {
+    .concept-title {
+      color: map-get($colors, "secondary");
+    }
+  }
+}
+
+.concept-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin: 0 0 map-get($spacing, "sm") 0;
+  line-height: 1.3;
+
+  @include respond-to("mobile") {
+    font-size: 1.1rem;
+  }
+}
+
+.concept-description {
+  color: map-get($colors, "text");
+  line-height: 1.5;
+  margin: 0 0 map-get($spacing, "md") 0;
+  font-size: 0.95rem;
+
+  @include respond-to("mobile") {
+    font-size: 0.9rem;
+  }
+}
+
+.concept-formula {
+  background: #f8f9fa;
+  border-radius: map-get($border-radius, "sm");
+  padding: map-get($spacing, "md");
+  border: 1px solid #e9ecef;
+  margin-top: map-get($spacing, "sm");
+}
+
+.formula-display {
+  text-align: center;
+  overflow-x: auto;
+
+  .katex {
+    font-size: 1.1rem;
+
+    @include respond-to("mobile") {
+      font-size: 1rem;
+    }
+  }
+}
+
+// Add concepts card style to menu
+.menu-card--concepts {
+  border: 2px solid #6c757d;
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.1);
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(108, 117, 125, 0.18);
+  }
+}

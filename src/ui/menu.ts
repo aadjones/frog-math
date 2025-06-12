@@ -1,6 +1,8 @@
 export function mountMenu(
   container: HTMLElement,
-  onSelect: (mode: "single" | "multi" | "pond" | "uberhopper") => void,
+  onSelect: (
+    mode: "single" | "multi" | "pond" | "uberhopper" | "concepts",
+  ) => void,
 ) {
   container.innerHTML = "";
 
@@ -8,11 +10,24 @@ export function mountMenu(
   const wrapper = document.createElement("div");
   wrapper.className = "menu-wrapper";
 
+  // Math Concepts header link (absolute top-right)
+  const conceptsHeaderLink = document.createElement("button");
+  conceptsHeaderLink.className = "menu-header-link";
+  conceptsHeaderLink.innerHTML = "📚 Math Concepts";
+  conceptsHeaderLink.addEventListener("click", () => onSelect("concepts"));
+  wrapper.appendChild(conceptsHeaderLink);
+
+  // Header row (just the frog emoji, centered)
+  const headerRow = document.createElement("div");
+  headerRow.className = "menu-header-row";
+
   // Frog emoji splash
   const frog = document.createElement("div");
   frog.className = "menu-logo";
   frog.textContent = "🐸";
-  wrapper.appendChild(frog);
+  headerRow.appendChild(frog);
+
+  wrapper.appendChild(headerRow);
 
   // Title
   const title = document.createElement("h1");
