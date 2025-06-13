@@ -99,10 +99,17 @@ export function drawAnimationFrame({
   // Draw current pad last with reachable color if appropriate
   const currentPadX = worldX(frogIdx) - camX;
   const currentPadReachable = isReachable(frogIdx); // will always be true in single mode
-  drawLilyPad(p, currentPadX, canvas.h / 2, padSize, currentPadReachable ? "#4a4" : "#8f8", {
-    notchAngle: -p.QUARTER_PI,
-    squish: 0.9,
-  });
+  drawLilyPad(
+    p,
+    currentPadX,
+    canvas.h / 2,
+    padSize,
+    currentPadReachable ? "#4a4" : "#8f8",
+    {
+      notchAngle: -p.QUARTER_PI,
+      squish: 0.9,
+    },
+  );
   // Draw frog using the new image-aware function at correct arc position
   const OFFSET = 10;
   drawFrog(p, frogXw - camX, frogY - OFFSET, frogImage, frogSize, facingRight);

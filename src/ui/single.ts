@@ -288,7 +288,8 @@ export function mountSingle(root: HTMLElement) {
           setAnimating,
         },
         isReachable: (idx) =>
-          idx === frogIdx || (((idx - frogIdx) % hopSize) + hopSize) % hopSize === 0,
+          idx === frogIdx ||
+          (((idx - frogIdx) % hopSize) + hopSize) % hopSize === 0,
         showBadge: (frogXw, frogY, camX) => {
           // Adjust badge position for the frog image - move it above the frog
           const badgeX = frogXw - camX;

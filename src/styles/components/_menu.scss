@@ -7,6 +7,7 @@
   background: linear-gradient(135deg, #e0ffe7 0%, #b3e5fc 100%);
   padding: map-get($spacing, "xl") map-get($spacing, "md");
   width: 100%;
+  position: relative;
 
   @include respond-to("mobile") {
     padding: map-get($spacing, "lg") map-get($spacing, "sm");
@@ -156,4 +157,50 @@
     font-size: 0.95em;
     color: map-get($colors, "primary-light");
   }
+}
+
+.menu-header-link {
+  position: absolute;
+  top: map-get($spacing, "md");
+  right: map-get($spacing, "md");
+  background: #fffbe7;
+  border: 2px solid #ffe082;
+  color: map-get($colors, "secondary");
+  font-size: 1.18rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: map-get($spacing, "sm") map-get($spacing, "lg");
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
+  transition:
+    background 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+  text-decoration: underline;
+  z-index: 2;
+  outline: none;
+
+  &:hover,
+  &:focus {
+    background: #fffde7;
+    color: map-get($colors, "primary");
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.18);
+    border-color: #ffd54f;
+  }
+
+  @include respond-to("mobile") {
+    font-size: 1.05rem;
+    padding: map-get($spacing, "xs") map-get($spacing, "md");
+    top: map-get($spacing, "sm");
+    right: map-get($spacing, "sm");
+  }
+}
+
+.menu-header-row {
+  margin-bottom: map-get($spacing, "md");
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
