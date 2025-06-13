@@ -6,8 +6,8 @@ Browser playground for teaching number theory with hopping frogs.
 
 - **Single‑hopper** — one frog that always jumps _n_ pads (pick 0‑10).
 - **Multi‑hopper** — special breed that can hop **±5** or **±7** pads to reach a target fly.
-- **Pond** — hopping around lily pads arranged in a circle
-- **Überhopper** — ever-increasing hops
+- **Pond** — hopping around lily pads arranged in a circle.
+- **Überhopper** — ever-increasing hops.
 
 ## Getting Started
 
