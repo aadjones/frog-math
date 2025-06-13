@@ -41,17 +41,17 @@ export function mountConcepts(container: HTMLElement) {
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
 
-  const frogHeader = document.createElement("th");
-  frogHeader.textContent = "FrogMath Concept";
-  frogHeader.className = "concepts-table-header concepts-table-header--frog";
-
   const standardHeader = document.createElement("th");
   standardHeader.textContent = "Standard Math Concept";
   standardHeader.className =
     "concepts-table-header concepts-table-header--standard";
 
-  headerRow.appendChild(frogHeader);
+  const frogHeader = document.createElement("th");
+  frogHeader.textContent = "FrogMath Concept";
+  frogHeader.className = "concepts-table-header concepts-table-header--frog";
+
   headerRow.appendChild(standardHeader);
+  headerRow.appendChild(frogHeader);
   thead.appendChild(headerRow);
   table.appendChild(thead);
 
@@ -80,22 +80,20 @@ export function mountConcepts(container: HTMLElement) {
       const conceptRow = document.createElement("tr");
       conceptRow.className = "concepts-concept-row";
 
-      // Frog math column
-      const frogCell = document.createElement("td");
-      frogCell.className = "concepts-cell concepts-cell--frog";
-
-      const frogContent = createConceptContent(concept, "frog");
-      frogCell.appendChild(frogContent);
-
-      // Standard math column
+      // Standard math column (now first)
       const standardCell = document.createElement("td");
       standardCell.className = "concepts-cell concepts-cell--standard";
-
       const standardContent = createConceptContent(concept, "standard");
       standardCell.appendChild(standardContent);
 
-      conceptRow.appendChild(frogCell);
+      // Frog math column (now second)
+      const frogCell = document.createElement("td");
+      frogCell.className = "concepts-cell concepts-cell--frog";
+      const frogContent = createConceptContent(concept, "frog");
+      frogCell.appendChild(frogContent);
+
       conceptRow.appendChild(standardCell);
+      conceptRow.appendChild(frogCell);
       tbody.appendChild(conceptRow);
     });
   });
@@ -122,6 +120,17 @@ function groupConceptsByCategory(
   );
 }
 
+function renderDescriptionWithKatex(text: string): string {
+  // Replace $...$ with rendered KaTeX (non-greedy, supports multiple per line)
+  return text.replace(/\$(.+?)\$/g, (match, math) => {
+    try {
+      return katex.renderToString(math, { throwOnError: false });
+    } catch {
+      return match; // fallback to raw text if KaTeX fails
+    }
+  });
+}
+
 function createConceptContent(
   concept: MathConcept,
   type: "frog" | "standard",
@@ -136,38 +145,30 @@ function createConceptContent(
     type === "frog" ? concept.frogMathName : concept.standardMathName;
   content.appendChild(title);
 
-  // Description
+  // Description (with KaTeX rendering for $...$)
   const description = document.createElement("p");
   description.className = "concept-description";
-  description.textContent =
+  const descText =
     type === "frog"
       ? concept.frogMathDescription
       : concept.standardMathDescription;
+  description.innerHTML = renderDescriptionWithKatex(descText);
   content.appendChild(description);
 
-  // Formula
-  const formulaContainer = document.createElement("div");
-  formulaContainer.className = "concept-formula";
+  // Formula (only if non-empty)
+  const formulaText =
+    type === "frog" ? concept.frogMathFormula : concept.standardMathFormula;
+  if (formulaText && formulaText.trim() !== "") {
+    const formulaContainer = document.createElement("div");
+    formulaContainer.className = "concept-formula";
 
-  const formula = document.createElement("div");
-  formula.className = "formula-display";
+    const formula = document.createElement("div");
+    formula.className = "formula-display";
+    formula.innerHTML = renderDescriptionWithKatex(formulaText);
 
-  try {
-    const formulaText =
-      type === "frog" ? concept.frogMathFormula : concept.standardMathFormula;
-    formula.innerHTML = katex.renderToString(formulaText, {
-      displayMode: true,
-      throwOnError: false,
-      errorColor: "#cc0000",
-    });
-  } catch (error) {
-    console.error("KaTeX rendering error:", error);
-    formula.textContent =
-      type === "frog" ? concept.frogMathFormula : concept.standardMathFormula;
+    formulaContainer.appendChild(formula);
+    content.appendChild(formulaContainer);
   }
-
-  formulaContainer.appendChild(formula);
-  content.appendChild(formulaContainer);
 
   return content;
 }

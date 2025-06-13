@@ -6,84 +6,186 @@ export interface MathConcept {
   standardMathDescription: string;
   frogMathFormula: string;
   standardMathFormula: string;
-  category: "number-theory" | "combinatorics" | "graph-theory" | "optimization";
+  category: "foundations" | "divisibility" | "euclid" | "mod-arithmetic";
 }
 
 export const mathConcepts: MathConcept[] = [
   {
-    id: "reachable-pads",
-    frogMathName: "Reachable Lily Pads",
-    standardMathName: "Arithmetic Sequences",
-    frogMathDescription:
-      "Which lily pads can a frog reach with a fixed hop distance?",
-    standardMathDescription:
-      "A sequence where each term differs from the previous by a constant value.",
-    frogMathFormula:
-      "\\text{Pad } i \\text{ is reachable if } i \\equiv 0 \\pmod{\\text{hop}}",
-    standardMathFormula: "a_n = a_1 + (n-1)d",
-    category: "number-theory",
+    id: "pads",
+    frogMathName: "River",
+    standardMathName: "Integers",
+    frogMathDescription: "The set of lily pads in the river.",
+    standardMathDescription: "The set of integers, $\\mathbb{Z}$.",
+    category: "foundations",
+    frogMathFormula: "",
+    standardMathFormula: "",
   },
   {
-    id: "gcd",
-    frogMathName: "Greatest Common Hop",
-    standardMathName: "Greatest Common Divisor (GCD)",
+    id: "fly-set",
+    frogMathName: "Fly Set",
+    standardMathName: "Multiples",
     frogMathDescription:
-      "The largest hop distance that can reach all possible lily pads.",
-    standardMathDescription:
-      "The largest positive integer that divides two or more integers without remainder.",
-    frogMathFormula:
-      "\\text{GCH}(a,b) = \\text{largest hop that reaches both } a \\text{ and } b",
-    standardMathFormula:
-      "\\gcd(a,b) = \\max\\{d \\in \\mathbb{Z}^+ : d \\mid a \\text{ and } d \\mid b\\}",
-    category: "number-theory",
+      "The set of lily pads an $a$-hopper can reach to catch a fly.",
+    standardMathDescription: "The ideal $a\\mathbb{Z}$.",
+    category: "foundations",
+    frogMathFormula: "",
+    standardMathFormula: "",
   },
   {
-    id: "multi-hop-reachability",
-    frogMathName: "Multi-Hop Reachability",
-    standardMathName: "Graph Connectivity",
+    id: "mimicry",
+    frogMathName: "Mimicry",
+    standardMathName: "Divisibility",
     frogMathDescription:
-      "Which lily pads can be reached using multiple different hop distances?",
+      "Alice the frog can <b>mimic</b> Bob if Alice can reach any lily pad that Bob can reach.",
     standardMathDescription:
-      "Determining which nodes are reachable from a starting node in a graph.",
-    frogMathFormula:
-      "R(s,H) = \\{p : \\text{pad } p \\text{ reachable from } s \\text{ using hops } H\\}",
-    standardMathFormula:
-      "C(v) = \\{u \\in V : \\text{path exists from } v \\text{ to } u\\}",
-    category: "graph-theory",
+      "$a \\mid b$ if there exists $k \\in \\mathbb{Z}$ such that $b = k \\cdot a$.",
+    category: "divisibility",
+    frogMathFormula: "",
+    standardMathFormula: "",
   },
   {
-    id: "optimal-path",
-    frogMathName: "Optimal Frog Path",
-    standardMathName: "Shortest Path Problem",
-    frogMathDescription:
-      "Finding the minimum number of hops to reach a target lily pad.",
-    standardMathDescription:
-      "Finding the path with minimum cost between two vertices in a graph.",
-    frogMathFormula:
-      "\\min\\{|P| : P \\text{ is a path from start to target}\\}",
-    standardMathFormula:
-      "\\min\\{\\sum_{e \\in P} w(e) : P \\text{ is a path from } s \\text{ to } t\\}",
-    category: "optimization",
-  },
-  {
-    id: "hop-combinations",
-    frogMathName: "Hop Combinations",
+    id: "linear-combinations",
+    frogMathName: "Linear Combinations",
     standardMathName: "Linear Combinations",
     frogMathDescription:
-      "How many different ways can a frog combine different hop distances?",
+      "If Alice the $a$-hopper can reach lily pad $b$ and lily pad $c$, then she can reach $b + c$.",
     standardMathDescription:
-      "Expressing a number as a sum of multiples of given numbers.",
+      "If $a \\mid b$ and $a \\mid c$, then $a \\mid b + c$.",
+    category: "divisibility",
     frogMathFormula:
-      "\\text{Target} = \\sum_{i=1}^{n} k_i \\cdot \\text{hop}_i",
+      "<b>Proof:</b> First Alice reaches lily pad $b$. From there, pretending that she is at the origin, she hops to $c$, putting her at lily pad $b + c$.",
     standardMathFormula:
-      "b = \\sum_{i=1}^{n} x_i a_i \\text{ where } x_i \\in \\mathbb{Z}",
-    category: "combinatorics",
+      "<b>Proof:</b> Let $b = k_1 \\cdot a$ and $c = k_2 \\cdot a$ for some $k_1, k_2 \\in \\mathbb{Z}$. Then $b + c = (k_1 + k_2) \\cdot a$, so $a \\mid b + c$.",
+  },
+  {
+    id: "primes",
+    frogMathName: "Immimicable frogs",
+    standardMathName: "Prime numbers",
+    frogMathDescription:
+      "Percy the $p$-hopper ($p > 1$) is <b>immimicable</b> if he can only be mimicked by $1$-hoppers or $p$-hoppers.",
+    standardMathDescription:
+      "A prime number $p$ is a number that has exactly two distinct positive divisors: $1$ and $p$.",
+    category: "divisibility",
+    frogMathFormula: "",
+    standardMathFormula: "",
+  },
+  {
+    id: "primes-factors",
+    frogMathName: "Fundamental Theorem of Mimicry",
+    standardMathName: "Existence of prime factors",
+    frogMathDescription:
+      "Every frog, other than a $1$-hopper, can be mimicked by an immimicable frog.",
+    standardMathDescription:
+      "Every integer greater than $1$ can be written as a product of prime numbers.",
+    category: "divisibility",
+    frogMathFormula: "",
+    standardMathFormula: "",
+  },
+  {
+    id: "multi-hoppers",
+    frogMathName: "Multihoppers",
+    standardMathName: "Linear Diophantine Equations",
+    frogMathDescription:
+      "A baby frog whose parents are $a$-hoppers and $b$-hoppers is an $(a, b)$-multihopper.",
+    standardMathDescription:
+      "The ideal generated by $a$ and $b$ is the set of all linear combinations of $a$ and $b$.",
+    category: "euclid",
+    frogMathFormula: "",
+    standardMathFormula: "",
+  },
+  {
+    id: "euclid",
+    frogMathName: "The Euclidean Algorithm",
+    standardMathName: "The Euclidean Algorithm",
+    frogMathDescription:
+      "The process of discovering the smallest hop that an $(a, b)$-multihopper can mimic.",
+    standardMathDescription:
+      "The algorithm that recursively divides the larger number by the smaller number and takes the remainder.",
+    category: "euclid",
+    frogMathFormula:
+      "<b>Motivation:</b> An $(a,b)$-multihopper can mimic an $a-b$ hop, so it can mimic a $(b, a-b)$-hopper. Repeat this process until the two hop amounts are the same.",
+    standardMathFormula: "",
+  },
+  {
+    id: "euclid",
+    frogMathName: "Fundamental Theorem of Multihoppers",
+    standardMathName: "Bézout's Identity",
+    frogMathDescription:
+      "The relationship between the fly set of a multihopper and the fly set of a single-hopper.",
+    standardMathDescription:
+      "If $a$ and $b$ have greatest common divisor $d$, then the integers of the form $ax + by$ are exactly the multiples of $d$.",
+    category: "euclid",
+    frogMathFormula:
+      "<b>Motivation:</b> Apply the Euclidean algorithm to the $(a,b)$ multihopper until it is reduced to mimicking a $(d, d)$-hopper.",
+    standardMathFormula: "",
+  },
+  {
+    id: "mods",
+    frogMathName: "Pond Hoppers",
+    standardMathName: "Modular Arithmetic",
+    frogMathDescription:
+      "Frogs hopping around a circular pond of $n$ lily pads.",
+    standardMathDescription: "Arithmetic with remainders when dividing by $n$.",
+    category: "mod-arithmetic",
+    frogMathFormula: "",
+    standardMathFormula: "",
+  },
+  {
+    id: "congruences",
+    frogMathName: "Congruences",
+    standardMathName: "Congruences",
+    frogMathDescription:
+      "$a \\equiv b \\pmod{n}$ if an $n$-hopping river frog can get from lily pad $a$ to $b$.",
+    standardMathDescription:
+      "$a \\equiv b \\pmod{n}$ if $a$ and $b$ have the same remainder when divided by $n$.",
+    category: "mod-arithmetic",
+    frogMathFormula: "",
+    standardMathFormula: "",
+  },
+  {
+    id: "congruences-properties",
+    frogMathName: "Flügenfröger",
+    standardMathName: "Multiplicative Inverses",
+    frogMathDescription:
+      "An $a$-hopper on the $n$-pond is a <b>flügenfrögen</b> if he can reach any lily pad.",
+    standardMathDescription:
+      "$a$ has a multiplicative inverse modulo $n$ if there exists an integer $b$ such that $ab \\equiv 1 \\pmod{n}$.",
+    category: "mod-arithmetic",
+    frogMathFormula: "",
+    standardMathFormula: "",
+  },
+  {
+    id: "congruences-properties",
+    frogMathName: "Flügenfröger Closure",
+    standardMathName: "Properties of Multiplicative Inverses",
+    frogMathDescription: "The product of two flügenfröger is a flügenfrögen.",
+    standardMathDescription:
+      "If $a$ and $b$ have multiplicative inverses modulo $n$, then $ab$ has a multiplicative inverse modulo $n$.",
+    category: "mod-arithmetic",
+    frogMathFormula:
+      "<b>Proof:</b> Suppose we are out an an $n$ lily pad pond, and we have two flügenfröger, an $a$-hopper and a $b$-hopper. One day, $a$ and her friend $ab$ start hopping in sync. The $a$-hopper hops until she reaches $1$. The $ab$-hopper therefore reaches $b$. Thus, the $ab$-hopper can mimic a $b$-hopper. Since the $b$-hopper is a flügenfrögen, this means the $ab$-hopper is a flügenfrögen.",
+    standardMathFormula:
+      "<b>Proof:</b> Let $x$ be the multiplicative inverse of $a$ modulo $n$. Then $ax \\equiv 1 \\pmod{n}$. Let $y$ be the multiplicative inverse of $b$ modulo $n$. Then $by \\equiv 1 \\pmod{n}$. Then $(ab)(yx) \\equiv a(by)x \\equiv ax \\equiv 1 \\pmod{n}$. This means $yx$ is the multiplicative inverse of $ab$ modulo $n$.",
+  },
+  {
+    id: "chinese-remainder-theorem",
+    frogMathName: "The Reunion of the Parents",
+    standardMathName: "Chinese Remainder Theorem",
+    frogMathDescription:
+      "Two frogs that are not co-mimicable on the river can always be reunited.",
+    standardMathDescription:
+      "If $a$ and $b$ are co-prime, then the system of congruences $x \\equiv s \\pmod{a}$ and $x \\equiv t \\pmod{b}$ has a solution.",
+    category: "mod-arithmetic",
+    frogMathFormula:
+      "<b>Proof:</b> Suppose the parents are $a$ and $b$. Since they are not co-mimicable, their baby can make any displacement using a combination of $a$ and $b$ hops. The baby first makes her way over to wherever $a$ is sitting. Then the baby calculates how many $a$ hops and $b$ hops she would need in order to get to wherever $b$ is sitting. Then, the baby and $a$ do a hop-along. After that, $b$ does a reverse hop-along. At the end, everyone is on the same lily pad.",
+    standardMathFormula:
+      "<b>Proof:</b> By Bezout's identity, there exist integers $u$ and $v$ such that $au + bv = 1$. Then let $x = sbv + tau$. Then $x = s(1 - au) + tau = s + (t - s)au$, which shows that $x \\equiv s \\pmod{a}.$ By similar reasoning, $x \\equiv t \\pmod{b}$.",
   },
 ];
 
 export const conceptCategories = {
-  "number-theory": "Number Theory",
-  combinatorics: "Combinatorics",
-  "graph-theory": "Graph Theory",
-  optimization: "Optimization",
+  foundations: "Foundations",
+  divisibility: "Divisibility",
+  euclid: "The Euclidean Algorithm",
+  "mod-arithmetic": "Modular Arithmetic",
 } as const;
