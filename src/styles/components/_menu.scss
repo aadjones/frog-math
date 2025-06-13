@@ -188,12 +188,18 @@
     box-shadow: 0 4px 16px rgba(255, 193, 7, 0.18);
     border-color: #ffd54f;
   }
+}
 
-  @include respond-to("mobile") {
+@media (max-width: 600px) {
+  .menu-header-link {
+    position: static;
+    display: block;
+    margin: 0 auto map-get($spacing, "md") auto;
+    width: max-content;
+    top: unset;
+    right: unset;
     font-size: 1.05rem;
     padding: map-get($spacing, "xs") map-get($spacing, "md");
-    top: map-get($spacing, "sm");
-    right: map-get($spacing, "sm");
   }
 }
 
