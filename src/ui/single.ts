@@ -7,6 +7,7 @@ import {
   debugMode,
   toggleDebug,
   getFeatureFlag,
+  gap,
 } from "./shared";
 import { MS_PER_PAD, hopDuration, nextIndex } from "../frogPhysics";
 import {
@@ -17,6 +18,7 @@ import {
 import { resetFrog, animateFrogIntro } from "./shared";
 import { drawAnimationFrame } from "./animation";
 import { loadFrogImageForP5 } from "./imageLoader";
+import { createTouchScrollState, setupTouchScroll, getCameraX, resetManualPosition, getSimpleCameraX } from "./touchScroll";
 import "../ui/sharedStyle.css";
 
 const HOP_RANGE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // change range if you like
@@ -33,6 +35,10 @@ let ready = false;
 export function mountSingle(root: HTMLElement) {
   root.innerHTML = "";
   addBackToMenu(root);
+  
+  // Touch/swipe state for mobile scrolling
+  const touchScrollState = createTouchScrollState();
+  
   new p5((p) => {
     let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
     let frogImage: p5.Image | null = null;
@@ -67,6 +73,7 @@ export function mountSingle(root: HTMLElement) {
       frogIdx = targetIdx;
       hopStart = p.millis();
       animating = true;
+      resetManualPosition(touchScrollState); // Reset manual scroll when hopping
       playHopSound(hopDur);
     }
 
@@ -153,6 +160,22 @@ export function mountSingle(root: HTMLElement) {
       // Now create canvas
       const canvasElem = p.createCanvas(canvas.w, canvas.h).elt;
       p.textSize(24);
+      
+      // Add touch events for mobile scrolling
+      setupTouchScroll(canvasElem, touchScrollState, {
+        getCurrentCamX: () => getSimpleCameraX(
+          touchScrollState,
+          animating,
+          fromIdx,
+          toIdx,
+          hopStart,
+          hopDur,
+          gap,
+          canvas.w,
+          () => p.millis()
+        )
+      });
+      
       ready = true;
 
       // Place belowSketch after the canvas
@@ -191,6 +214,7 @@ export function mountSingle(root: HTMLElement) {
       root.querySelector("#resetFrogBtn")!.addEventListener("click", () => {
         if (!ready) return;
         if (animating) return;
+        resetManualPosition(touchScrollState); // Reset manual scroll when resetting frog
         resetFrog(
           frogIdx,
           setFrogIdx,
@@ -290,6 +314,17 @@ export function mountSingle(root: HTMLElement) {
         isReachable: (idx) =>
           idx === frogIdx ||
           (((idx - frogIdx) % hopSize) + hopSize) % hopSize === 0,
+        customCamX: getCameraX(touchScrollState, getSimpleCameraX(
+          touchScrollState,
+          animating,
+          fromIdx,
+          toIdx,
+          hopStart,
+          hopDur,
+          gap,
+          canvas.w,
+          () => p.millis()
+        )),
         showBadge: (frogXw, frogY, camX) => {
           // Adjust badge position for the frog image - move it above the frog
           const badgeX = frogXw - camX;

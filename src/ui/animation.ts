@@ -22,6 +22,7 @@ export interface DrawOptions {
   debugMode: boolean;
   onWin?: (frogXw: number, camX: number) => void;
   frogImage?: p5.Image | null;
+  customCamX?: number;
 }
 
 export function drawAnimationFrame({
@@ -33,6 +34,7 @@ export function drawAnimationFrame({
   debugMode,
   onWin,
   frogImage,
+  customCamX,
 }: DrawOptions) {
   const { frogIdx, fromIdx, toIdx, hopStart, hopDur, animating, setAnimating } =
     state;
@@ -56,7 +58,7 @@ export function drawAnimationFrame({
   // Calculate positions
   const frogXw = p.lerp(fromIdx, toIdx, alpha) * gap;
   const frogY = frogYArc(alpha, canvas.h / 2, 20);
-  const camX = frogXw - canvas.w / 2;
+  const camX = customCamX !== undefined ? customCamX : frogXw - canvas.w / 2;
 
   // Determine frog direction based on movement
   const facingRight = toIdx >= fromIdx; // Face right by default, only face left when moving left

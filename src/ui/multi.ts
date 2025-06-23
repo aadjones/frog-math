@@ -8,6 +8,7 @@ import {
   animateFrogIntro,
   playVictorySound,
   getFeatureFlag,
+  gap,
 } from "./shared";
 import { MS_PER_PAD } from "../frogPhysics";
 import {
@@ -19,6 +20,7 @@ import { drawAnimationFrame } from "./animation";
 import { loadFrogImageForP5 } from "./imageLoader";
 import { ConfettiSystem } from "./confetti";
 import { createMultiHopperLevelManager } from "./levelSets";
+import { createTouchScrollState, setupTouchScroll, getCameraX, resetManualPosition, getSimpleCameraX } from "./touchScroll";
 import "../ui/sharedStyle.css";
 
 export function mountMulti(root: HTMLElement) {
@@ -177,6 +179,9 @@ export function mountMulti(root: HTMLElement) {
   // Initialize confetti system
   const confetti = new ConfettiSystem();
 
+  // Touch/swipe state for mobile scrolling
+  const touchScrollState = createTouchScrollState();
+
   function updateLevelDisplay() {
     const currentLevel = levelManager.getCurrentLevel();
     levelInfo.textContent = `Problem ${levelManager.getCurrentLevelIndex() + 1} of ${levelManager.getTotalLevels()}`;
@@ -302,8 +307,24 @@ export function mountMulti(root: HTMLElement) {
         console.warn("Failed to load frog image, using emoji fallback");
         frogImage = null;
       }
-      p.createCanvas(canvas.w, canvas.h, p.P2D);
+      const canvasElement = p.createCanvas(canvas.w, canvas.h, p.P2D);
       p.textSize(24);
+      
+      // Add touch events for mobile scrolling
+      setupTouchScroll(canvasElement.canvas, touchScrollState, {
+        getCurrentCamX: () => getSimpleCameraX(
+          touchScrollState,
+          animating,
+          fromIdx,
+          toIdx,
+          hopStart,
+          hopDur,
+          gap,
+          canvas.w,
+          () => p.millis()
+        )
+      });
+      
       ready = true;
       animateFrogIntro(
         0,
@@ -333,6 +354,17 @@ export function mountMulti(root: HTMLElement) {
           setAnimating,
         },
         isReachable: () => false,
+        customCamX: getCameraX(touchScrollState, getSimpleCameraX(
+          touchScrollState,
+          animating,
+          fromIdx,
+          toIdx,
+          hopStart,
+          hopDur,
+          gap,
+          canvas.w,
+          () => p.millis()
+        )),
         showTarget: (idx, screenX) => {
           const currentLevel = levelManager.getCurrentLevel();
           if (idx === currentLevel.target) {
@@ -424,6 +456,7 @@ export function mountMulti(root: HTMLElement) {
     hopDur = MS_PER_PAD * Math.abs(dist);
     hopStart = sketch.millis();
     animating = true;
+    resetManualPosition(touchScrollState); // Reset manual scroll when hopping
     playHopSound(hopDur);
   }
 
