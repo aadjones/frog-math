@@ -9,6 +9,7 @@ import {
   playVictorySound,
   getFeatureFlag,
   gap,
+  createGameState,
 } from "./shared";
 import { MS_PER_PAD } from "../frogPhysics";
 import {
@@ -166,12 +167,6 @@ export function mountMulti(root: HTMLElement) {
   const modalMessage = modal.querySelector("#modalMessage") as HTMLElement;
   const modalBtn = modal.querySelector("#modalBtn") as HTMLButtonElement;
 
-  let frogIdx = 0;
-  let hopStart = 0;
-  let hopDur = MS_PER_PAD;
-  let fromIdx = 0;
-  let toIdx = 0;
-  let animating = false;
   let hasWon = false;
   let awaitingNext = false;
   let ready = false;
@@ -181,6 +176,9 @@ export function mountMulti(root: HTMLElement) {
 
   // Touch/swipe state for mobile scrolling
   const touchScrollState = createTouchScrollState();
+  
+  // Game state
+  const gameState = createGameState();
 
   function updateLevelDisplay() {
     const currentLevel = levelManager.getCurrentLevel();
@@ -189,10 +187,10 @@ export function mountMulti(root: HTMLElement) {
   }
 
   function resetForNewLevel() {
-    frogIdx = 0;
-    fromIdx = 0;
-    toIdx = 0;
-    animating = false;
+    gameState.setFrogIdx(0);
+    gameState.setFromIdx(0);
+    gameState.setToIdx(0);
+    gameState.setAnimating(false);
     hasWon = false;
     awaitingNext = false;
     updateLevelDisplay();
@@ -314,11 +312,11 @@ export function mountMulti(root: HTMLElement) {
       setupTouchScroll(canvasElement.canvas, touchScrollState, {
         getCurrentCamX: () => getSimpleCameraX(
           touchScrollState,
-          animating,
-          fromIdx,
-          toIdx,
-          hopStart,
-          hopDur,
+          gameState.animating,
+          gameState.fromIdx,
+          gameState.toIdx,
+          gameState.hopStart,
+          gameState.hopDur,
           gap,
           canvas.w,
           () => p.millis()
@@ -326,17 +324,7 @@ export function mountMulti(root: HTMLElement) {
       });
       
       ready = true;
-      animateFrogIntro(
-        0,
-        0,
-        setFrogIdx,
-        setFromIdx,
-        setToIdx,
-        setHopStart,
-        setHopDur,
-        () => sketch.millis(),
-        setAnimating,
-      );
+      animateFrogIntro(gameState, 0, 0, () => sketch.millis());
     };
 
     p.draw = () => {
@@ -345,22 +333,22 @@ export function mountMulti(root: HTMLElement) {
       drawAnimationFrame({
         p,
         state: {
-          frogIdx,
-          fromIdx,
-          toIdx,
-          hopStart,
-          hopDur,
-          animating,
-          setAnimating,
+          frogIdx: gameState.frogIdx,
+          fromIdx: gameState.fromIdx,
+          toIdx: gameState.toIdx,
+          hopStart: gameState.hopStart,
+          hopDur: gameState.hopDur,
+          animating: gameState.animating,
+          setAnimating: gameState.setAnimating,
         },
         isReachable: () => false,
         customCamX: getCameraX(touchScrollState, getSimpleCameraX(
           touchScrollState,
-          animating,
-          fromIdx,
-          toIdx,
-          hopStart,
-          hopDur,
+          gameState.animating,
+          gameState.fromIdx,
+          gameState.toIdx,
+          gameState.hopStart,
+          gameState.hopDur,
           gap,
           canvas.w,
           () => p.millis()
@@ -401,7 +389,7 @@ export function mountMulti(root: HTMLElement) {
         frogImage,
         onWin: () => {
           const currentLevel = levelManager.getCurrentLevel();
-          if (frogIdx === currentLevel.target && !animating && !awaitingNext) {
+          if (gameState.frogIdx === currentLevel.target && !gameState.animating && !awaitingNext) {
             if (!hasWon) {
               playVictorySound();
               confetti.start();
@@ -427,37 +415,15 @@ export function mountMulti(root: HTMLElement) {
     };
   }, pond);
 
-  function setFrogIdx(n: number) {
-    frogIdx = n;
-  }
-  function setFromIdx(n: number) {
-    fromIdx = n;
-  }
-  function setToIdx(n: number) {
-    toIdx = n;
-  }
-  function setHopStart(n: number) {
-    hopStart = n;
-  }
-  function setHopDur(n: number) {
-    hopDur = n;
-  }
-  function setAnimating(b: boolean) {
-    if (animating && !b) {
-      frogIdx = toIdx;
-    }
-    animating = b;
-  }
-
   function startHop(dist: number) {
-    if (animating || awaitingNext) return;
-    fromIdx = frogIdx;
-    toIdx = frogIdx + dist;
-    hopDur = MS_PER_PAD * Math.abs(dist);
-    hopStart = sketch.millis();
-    animating = true;
+    if (gameState.animating || awaitingNext) return;
+    gameState.setFromIdx(gameState.frogIdx);
+    gameState.setToIdx(gameState.frogIdx + dist);
+    gameState.setHopDur(MS_PER_PAD * Math.abs(dist));
+    gameState.setHopStart(sketch.millis());
+    gameState.setAnimating(true);
     resetManualPosition(touchScrollState); // Reset manual scroll when hopping
-    playHopSound(hopDur);
+    playHopSound(gameState.hopDur);
   }
 
   wrapper.querySelector("#left5")!.addEventListener("click", () => {
@@ -483,16 +449,7 @@ export function mountMulti(root: HTMLElement) {
   });
   wrapper.querySelector("#resetFrogBtn")!.addEventListener("click", () => {
     if (!ready) return;
-    if (animating || awaitingNext) return;
-    resetFrog(
-      frogIdx,
-      setFrogIdx,
-      setFromIdx,
-      setToIdx,
-      setHopStart,
-      setHopDur,
-      setAnimating,
-      () => sketch.millis(),
-    );
+    if (gameState.animating || awaitingNext) return;
+    resetFrog(gameState, () => sketch.millis());
   });
 }

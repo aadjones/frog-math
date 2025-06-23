@@ -8,14 +8,17 @@ import {
   toggleDebug,
   getFeatureFlag,
   gap,
+  createGameState,
+  resetFrog,
+  animateFrogIntro,
 } from "./shared";
-import { MS_PER_PAD, hopDuration, nextIndex } from "../frogPhysics";
+import { hopDuration, nextIndex } from "../frogPhysics";
 import {
   addBackToMenu,
   wrapCenteredContent,
   createInstructionBanner,
 } from "./uiHelpers";
-import { resetFrog, animateFrogIntro } from "./shared";
+
 import { drawAnimationFrame } from "./animation";
 import { loadFrogImageForP5 } from "./imageLoader";
 import { createTouchScrollState, setupTouchScroll, getCameraX, resetManualPosition, getSimpleCameraX } from "./touchScroll";
@@ -23,13 +26,7 @@ import "../ui/sharedStyle.css";
 
 const HOP_RANGE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // change range if you like
 
-let frogIdx = 0;
 let hopSize = 3;
-let hopStart = 0;
-let fromIdx = 0;
-let toIdx = 0;
-let hopDur = MS_PER_PAD; // Will be calculated based on distance
-let animating = false;
 let ready = false;
 
 export function mountSingle(root: HTMLElement) {
@@ -39,40 +36,25 @@ export function mountSingle(root: HTMLElement) {
   // Touch/swipe state for mobile scrolling
   const touchScrollState = createTouchScrollState();
   
+  // Game state
+  const gameState = createGameState();
+  
   new p5((p) => {
     let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
     let frogImage: p5.Image | null = null;
 
-    function setFrogIdx(n: number) {
-      frogIdx = n;
-    }
-    function setFromIdx(n: number) {
-      fromIdx = n;
-    }
-    function setToIdx(n: number) {
-      toIdx = n;
-    }
-    function setHopStart(n: number) {
-      hopStart = n;
-    }
-    function setHopDur(n: number) {
-      hopDur = n;
-    }
-    function setAnimating(b: boolean) {
-      animating = b;
-    }
-
     function startHop(direction: 1 | -1) {
-      if (animating) return;
+      if (gameState.animating) return;
       const targetIdx =
-        hopSize === 0 ? frogIdx : nextIndex(frogIdx, hopSize, direction);
-      const padsTravelled = Math.abs(targetIdx - frogIdx);
-      hopDur = hopDuration(padsTravelled);
-      fromIdx = frogIdx;
-      toIdx = targetIdx;
-      frogIdx = targetIdx;
-      hopStart = p.millis();
-      animating = true;
+        hopSize === 0 ? gameState.frogIdx : nextIndex(gameState.frogIdx, hopSize, direction);
+      const padsTravelled = Math.abs(targetIdx - gameState.frogIdx);
+      const hopDur = hopDuration(padsTravelled);
+      gameState.setFromIdx(gameState.frogIdx);
+      gameState.setToIdx(targetIdx);
+      gameState.setFrogIdx(targetIdx);
+      gameState.setHopStart(p.millis());
+      gameState.setHopDur(hopDur);
+      gameState.setAnimating(true);
       resetManualPosition(touchScrollState); // Reset manual scroll when hopping
       playHopSound(hopDur);
     }
@@ -165,11 +147,11 @@ export function mountSingle(root: HTMLElement) {
       setupTouchScroll(canvasElem, touchScrollState, {
         getCurrentCamX: () => getSimpleCameraX(
           touchScrollState,
-          animating,
-          fromIdx,
-          toIdx,
-          hopStart,
-          hopDur,
+          gameState.animating,
+          gameState.fromIdx,
+          gameState.toIdx,
+          gameState.hopStart,
+          gameState.hopDur,
           gap,
           canvas.w,
           () => p.millis()
@@ -198,11 +180,11 @@ export function mountSingle(root: HTMLElement) {
       // Add hop button listeners
       root.querySelector("#leftBtn")!.addEventListener("click", () => {
         if (!ready) return;
-        if (p.millis() - hopStart >= hopDur) startHop(-1);
+        if (p.millis() - gameState.hopStart >= gameState.hopDur) startHop(-1);
       });
       root.querySelector("#rightBtn")!.addEventListener("click", () => {
         if (!ready) return;
-        if (p.millis() - hopStart >= hopDur) startHop(1);
+        if (p.millis() - gameState.hopStart >= gameState.hopDur) startHop(1);
       });
 
       // Add debug and reset button listeners
@@ -213,18 +195,9 @@ export function mountSingle(root: HTMLElement) {
       }
       root.querySelector("#resetFrogBtn")!.addEventListener("click", () => {
         if (!ready) return;
-        if (animating) return;
+        if (gameState.animating) return;
         resetManualPosition(touchScrollState); // Reset manual scroll when resetting frog
-        resetFrog(
-          frogIdx,
-          setFrogIdx,
-          setFromIdx,
-          setToIdx,
-          setHopStart,
-          setHopDur,
-          setAnimating,
-          () => p.millis(),
-        );
+        resetFrog(gameState, () => p.millis());
       });
 
       const hopSel = root.querySelector("#hopSelect") as HTMLSelectElement;
@@ -255,7 +228,7 @@ export function mountSingle(root: HTMLElement) {
       if (shouldEnableArrowKeys("single")) {
         keydownHandler = (e: KeyboardEvent) => {
           if (!ready) return;
-          if (p.millis() - hopStart < hopDur) return;
+          if (p.millis() - gameState.hopStart < gameState.hopDur) return;
           if (e.key === "ArrowRight" || e.key === "d") {
             e.preventDefault();
             e.stopPropagation();
@@ -275,17 +248,7 @@ export function mountSingle(root: HTMLElement) {
       }
 
       // Animate frog intro from 0 to 0 (no sound)
-      animateFrogIntro(
-        0, // fromIdx
-        0, // toIdx
-        setFrogIdx,
-        setFromIdx,
-        setToIdx,
-        setHopStart,
-        setHopDur,
-        () => p.millis(),
-        setAnimating,
-      );
+      animateFrogIntro(gameState, 0, 0, () => p.millis());
 
       // Clean up event listener when unmounting
       const observer = new MutationObserver(() => {
@@ -303,24 +266,24 @@ export function mountSingle(root: HTMLElement) {
       drawAnimationFrame({
         p,
         state: {
-          frogIdx,
-          fromIdx,
-          toIdx,
-          hopStart,
-          hopDur,
-          animating,
-          setAnimating,
+          frogIdx: gameState.frogIdx,
+          fromIdx: gameState.fromIdx,
+          toIdx: gameState.toIdx,
+          hopStart: gameState.hopStart,
+          hopDur: gameState.hopDur,
+          animating: gameState.animating,
+          setAnimating: gameState.setAnimating,
         },
         isReachable: (idx) =>
-          idx === frogIdx ||
-          (((idx - frogIdx) % hopSize) + hopSize) % hopSize === 0,
+          idx === gameState.frogIdx ||
+          (((idx - gameState.frogIdx) % hopSize) + hopSize) % hopSize === 0,
         customCamX: getCameraX(touchScrollState, getSimpleCameraX(
           touchScrollState,
-          animating,
-          fromIdx,
-          toIdx,
-          hopStart,
-          hopDur,
+          gameState.animating,
+          gameState.fromIdx,
+          gameState.toIdx,
+          gameState.hopStart,
+          gameState.hopDur,
           gap,
           canvas.w,
           () => p.millis()

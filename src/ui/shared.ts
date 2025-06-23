@@ -51,51 +51,43 @@ export function getFeatureFlag<K extends keyof FeatureFlags>(
 
 /* Frog reset helper (unified) */
 export function resetFrog(
-  frogIdx: number,
-  setFrogIdx: (n: number) => void,
-  setFromIdx: (n: number) => void,
-  setToIdx: (n: number) => void,
-  setHopStart: (n: number) => void,
-  setHopDur?: (n: number) => void,
-  setAnimating?: (b: boolean) => void,
+  gameState: GameState,
   sketchMillis?: () => number,
 ) {
-  setFromIdx(frogIdx);
-  setToIdx(0);
-  setFrogIdx(0);
+  const currentFrogIdx = gameState.frogIdx;
+  gameState.setFromIdx(currentFrogIdx);
+  gameState.setToIdx(0);
+  gameState.setFrogIdx(0);
 
-  // Handle animation if animation parameters are provided
-  if (setHopDur && setAnimating && sketchMillis) {
-    setHopDur(MS_PER_PAD * Math.max(1, Math.abs(frogIdx)));
-    setHopStart(sketchMillis());
-    setAnimating(true);
+  // Handle animation if sketch timing is provided
+  if (sketchMillis) {
+    gameState.setHopDur(MS_PER_PAD * Math.max(1, Math.abs(currentFrogIdx)));
+    gameState.setHopStart(sketchMillis());
+    gameState.setAnimating(true);
   } else {
     // Instant reset
-    setHopStart(performance.now());
+    gameState.setHopStart(performance.now());
   }
 }
+
+
 
 /* Frog intro animation (no sound) */
 export function animateFrogIntro(
+  gameState: GameState,
   fromIdx: number,
   toIdx: number,
-  setFrogIdx: (n: number) => void,
-  setFromIdx: (n: number) => void,
-  setToIdx: (n: number) => void,
-  setHopStart: (n: number) => void,
-  setHopDur: (n: number) => void,
   sketchMillis: () => number,
-  setAnimating?: (b: boolean) => void,
 ) {
-  setFromIdx(fromIdx);
-  setToIdx(toIdx);
-  setHopDur(MS_PER_PAD * Math.max(1, Math.abs(toIdx - fromIdx)));
-  setHopStart(sketchMillis());
-  setFrogIdx(toIdx);
-  if (setAnimating) {
-    setAnimating(true);
-  }
+  gameState.setFromIdx(fromIdx);
+  gameState.setToIdx(toIdx);
+  gameState.setHopDur(MS_PER_PAD * Math.max(1, Math.abs(toIdx - fromIdx)));
+  gameState.setHopStart(sketchMillis());
+  gameState.setFrogIdx(toIdx);
+  gameState.setAnimating(true);
 }
+
+
 
 /* Audio */
 const audioCtx = new AudioContext();
@@ -132,4 +124,55 @@ export function shouldDisplayAvailablePads(mode: "single" | "multi") {
 // Shared arrow key enable logic
 export function shouldEnableArrowKeys(mode: "single" | "multi") {
   return mode === "single";
+}
+
+/* Shared game state management */
+export interface GameState {
+  // Getters
+  readonly frogIdx: number;
+  readonly hopStart: number;
+  readonly hopDur: number;
+  readonly fromIdx: number;
+  readonly toIdx: number;
+  readonly animating: boolean;
+  
+  // Setters
+  setFrogIdx: (n: number) => void;
+  setFromIdx: (n: number) => void;
+  setToIdx: (n: number) => void;
+  setHopStart: (n: number) => void;
+  setHopDur: (n: number) => void;
+  setAnimating: (b: boolean) => void;
+}
+
+export function createGameState(): GameState {
+  let frogIdx = 0;
+  let hopStart = 0;
+  let hopDur = MS_PER_PAD;
+  let fromIdx = 0;
+  let toIdx = 0;
+  let animating = false;
+
+  return {
+    // Getters
+    get frogIdx() { return frogIdx; },
+    get hopStart() { return hopStart; },
+    get hopDur() { return hopDur; },
+    get fromIdx() { return fromIdx; },
+    get toIdx() { return toIdx; },
+    get animating() { return animating; },
+    
+    // Setters
+    setFrogIdx: (n: number) => { frogIdx = n; },
+    setFromIdx: (n: number) => { fromIdx = n; },
+    setToIdx: (n: number) => { toIdx = n; },
+    setHopStart: (n: number) => { hopStart = n; },
+    setHopDur: (n: number) => { hopDur = n; },
+    setAnimating: (b: boolean) => { 
+      if (animating && !b) {
+        frogIdx = toIdx; // Update frog position when animation ends
+      }
+      animating = b; 
+    },
+  };
 }
