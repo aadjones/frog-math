@@ -21,7 +21,13 @@ import { drawAnimationFrame } from "./animation";
 import { loadFrogImageForP5 } from "./imageLoader";
 import { ConfettiSystem } from "./confetti";
 import { createMultiHopperLevelManager } from "./levelSets";
-import { createTouchScrollState, setupTouchScroll, getCameraX, resetManualPosition, getSimpleCameraX } from "./touchScroll";
+import {
+  createTouchScrollState,
+  setupTouchScroll,
+  getCameraX,
+  resetManualPosition,
+  getSimpleCameraX,
+} from "./touchScroll";
 import "../ui/sharedStyle.css";
 
 export function mountMulti(root: HTMLElement) {
@@ -176,7 +182,7 @@ export function mountMulti(root: HTMLElement) {
 
   // Touch/swipe state for mobile scrolling
   const touchScrollState = createTouchScrollState();
-  
+
   // Game state
   const gameState = createGameState();
 
@@ -307,22 +313,23 @@ export function mountMulti(root: HTMLElement) {
       }
       const canvasElement = p.createCanvas(canvas.w, canvas.h, p.P2D);
       p.textSize(24);
-      
+
       // Add touch events for mobile scrolling
       setupTouchScroll(canvasElement.canvas, touchScrollState, {
-        getCurrentCamX: () => getSimpleCameraX(
-          touchScrollState,
-          gameState.animating,
-          gameState.fromIdx,
-          gameState.toIdx,
-          gameState.hopStart,
-          gameState.hopDur,
-          gap,
-          canvas.w,
-          () => p.millis()
-        )
+        getCurrentCamX: () =>
+          getSimpleCameraX(
+            touchScrollState,
+            gameState.animating,
+            gameState.fromIdx,
+            gameState.toIdx,
+            gameState.hopStart,
+            gameState.hopDur,
+            gap,
+            canvas.w,
+            () => p.millis(),
+          ),
       });
-      
+
       ready = true;
       animateFrogIntro(gameState, 0, 0, () => sketch.millis());
     };
@@ -342,17 +349,20 @@ export function mountMulti(root: HTMLElement) {
           setAnimating: gameState.setAnimating,
         },
         isReachable: () => false,
-        customCamX: getCameraX(touchScrollState, getSimpleCameraX(
+        customCamX: getCameraX(
           touchScrollState,
-          gameState.animating,
-          gameState.fromIdx,
-          gameState.toIdx,
-          gameState.hopStart,
-          gameState.hopDur,
-          gap,
-          canvas.w,
-          () => p.millis()
-        )),
+          getSimpleCameraX(
+            touchScrollState,
+            gameState.animating,
+            gameState.fromIdx,
+            gameState.toIdx,
+            gameState.hopStart,
+            gameState.hopDur,
+            gap,
+            canvas.w,
+            () => p.millis(),
+          ),
+        ),
         showTarget: (idx, screenX) => {
           const currentLevel = levelManager.getCurrentLevel();
           if (idx === currentLevel.target) {
@@ -389,7 +399,11 @@ export function mountMulti(root: HTMLElement) {
         frogImage,
         onWin: () => {
           const currentLevel = levelManager.getCurrentLevel();
-          if (gameState.frogIdx === currentLevel.target && !gameState.animating && !awaitingNext) {
+          if (
+            gameState.frogIdx === currentLevel.target &&
+            !gameState.animating &&
+            !awaitingNext
+          ) {
             if (!hasWon) {
               playVictorySound();
               confetti.start();

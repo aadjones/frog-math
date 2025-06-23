@@ -24,9 +24,9 @@ export const mathConcepts: MathConcept[] = [
     id: "fly-set",
     frogMathName: "Fly Set",
     standardMathName: "Multiples",
-    frogMathDescription:
-      "The set of lily pads an $a$-hopper can reach.",
-    standardMathDescription: "The ideal $a\\mathbb{Z} = \\{ka \\mid k \\in \\mathbb{Z}\\}$.",
+    frogMathDescription: "The set of lily pads an $a$-hopper can reach.",
+    standardMathDescription:
+      "The ideal $a\\mathbb{Z} = \\{ka \\mid k \\in \\mathbb{Z}\\}$.",
     category: "foundations",
     frogMathFormula: "",
     standardMathFormula: "",

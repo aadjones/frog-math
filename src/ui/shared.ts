@@ -50,10 +50,7 @@ export function getFeatureFlag<K extends keyof FeatureFlags>(
 }
 
 /* Frog reset helper (unified) */
-export function resetFrog(
-  gameState: GameState,
-  sketchMillis?: () => number,
-) {
+export function resetFrog(gameState: GameState, sketchMillis?: () => number) {
   const currentFrogIdx = gameState.frogIdx;
   gameState.setFromIdx(currentFrogIdx);
   gameState.setToIdx(0);
@@ -70,8 +67,6 @@ export function resetFrog(
   }
 }
 
-
-
 /* Frog intro animation (no sound) */
 export function animateFrogIntro(
   gameState: GameState,
@@ -86,8 +81,6 @@ export function animateFrogIntro(
   gameState.setFrogIdx(toIdx);
   gameState.setAnimating(true);
 }
-
-
 
 /* Audio */
 const audioCtx = new AudioContext();
@@ -135,7 +128,7 @@ export interface GameState {
   readonly fromIdx: number;
   readonly toIdx: number;
   readonly animating: boolean;
-  
+
   // Setters
   setFrogIdx: (n: number) => void;
   setFromIdx: (n: number) => void;
@@ -155,24 +148,46 @@ export function createGameState(): GameState {
 
   return {
     // Getters
-    get frogIdx() { return frogIdx; },
-    get hopStart() { return hopStart; },
-    get hopDur() { return hopDur; },
-    get fromIdx() { return fromIdx; },
-    get toIdx() { return toIdx; },
-    get animating() { return animating; },
-    
+    get frogIdx() {
+      return frogIdx;
+    },
+    get hopStart() {
+      return hopStart;
+    },
+    get hopDur() {
+      return hopDur;
+    },
+    get fromIdx() {
+      return fromIdx;
+    },
+    get toIdx() {
+      return toIdx;
+    },
+    get animating() {
+      return animating;
+    },
+
     // Setters
-    setFrogIdx: (n: number) => { frogIdx = n; },
-    setFromIdx: (n: number) => { fromIdx = n; },
-    setToIdx: (n: number) => { toIdx = n; },
-    setHopStart: (n: number) => { hopStart = n; },
-    setHopDur: (n: number) => { hopDur = n; },
-    setAnimating: (b: boolean) => { 
+    setFrogIdx: (n: number) => {
+      frogIdx = n;
+    },
+    setFromIdx: (n: number) => {
+      fromIdx = n;
+    },
+    setToIdx: (n: number) => {
+      toIdx = n;
+    },
+    setHopStart: (n: number) => {
+      hopStart = n;
+    },
+    setHopDur: (n: number) => {
+      hopDur = n;
+    },
+    setAnimating: (b: boolean) => {
       if (animating && !b) {
         frogIdx = toIdx; // Update frog position when animation ends
       }
-      animating = b; 
+      animating = b;
     },
   };
 }

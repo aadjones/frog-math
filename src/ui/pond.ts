@@ -8,6 +8,7 @@ import {
 } from "./uiHelpers";
 import { loadFrogImageForP5, drawFrog } from "./imageLoader";
 import { drawLilyPad } from "./animation";
+import { setupKeyboardControls } from "./keyboardControls";
 
 export function mountPond(root: HTMLElement) {
   root.innerHTML = "";
@@ -203,31 +204,17 @@ export function mountPond(root: HTMLElement) {
   });
 
   // Keyboard controls
-  let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
-  function enableKeyboardControls() {
-    keydownHandler = (e: KeyboardEvent) => {
-      if (!ready) return;
-      if (hopDur !== 0 && performance.now() - hopStart < hopDur) return;
-      if (e.key === "ArrowRight" || e.key === "d") {
-        e.preventDefault();
-        hop(1);
-      }
-      if (e.key === "ArrowLeft" || e.key === "a") {
-        e.preventDefault();
-        hop(-1);
-      }
-    };
-    window.addEventListener("keydown", keydownHandler, true);
-  }
-  enableKeyboardControls();
-
-  // Clean up event listener when unmounting
-  const observer = new MutationObserver(() => {
-    if (!root.contains(pondContent)) {
-      if (keydownHandler)
-        window.removeEventListener("keydown", keydownHandler, true);
-      observer.disconnect();
-    }
-  });
-  observer.observe(root, { childList: true });
+  setupKeyboardControls(
+    root,
+    pondContent,
+    {
+      onLeftHop: () => hop(-1),
+      onRightHop: () => hop(1),
+    },
+    {
+      readyCheck: () => ready,
+      animationCheck: () =>
+        hopDur !== 0 && performance.now() - hopStart < hopDur,
+    },
+  );
 }

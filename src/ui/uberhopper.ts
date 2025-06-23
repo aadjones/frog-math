@@ -8,6 +8,7 @@ import {
 } from "./uiHelpers";
 import { loadUberhopperImageForP5, drawUberhopper } from "./imageLoader";
 import { drawLilyPad } from "./animation";
+import { setupKeyboardControls } from "./keyboardControls";
 
 export function mountUberhopper(root: HTMLElement) {
   root.innerHTML = "";
@@ -163,28 +164,17 @@ export function mountUberhopper(root: HTMLElement) {
     updateNextHopDisplay();
   });
 
-  // Keyboard controls
-  let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
-  function enableKeyboardControls() {
-    keydownHandler = (e: KeyboardEvent) => {
-      if (!ready) return;
-      if (hopDur !== 0 && performance.now() - hopStart < hopDur) return;
-      if (e.key === "ArrowRight" || e.key === "d") {
-        e.preventDefault();
-        hop();
-      }
-    };
-    window.addEventListener("keydown", keydownHandler, true);
-  }
-  enableKeyboardControls();
-
-  // Clean up event listener when unmounting
-  const observer = new MutationObserver(() => {
-    if (!root.contains(content)) {
-      if (keydownHandler)
-        window.removeEventListener("keydown", keydownHandler, true);
-      observer.disconnect();
-    }
-  });
-  observer.observe(root, { childList: true });
+  // Keyboard controls - only right hop for uberhopper
+  setupKeyboardControls(
+    root,
+    content,
+    {
+      onRightHop: () => hop(), // Only right arrow/d key supported
+    },
+    {
+      readyCheck: () => ready,
+      animationCheck: () =>
+        hopDur !== 0 && performance.now() - hopStart < hopDur,
+    },
+  );
 }

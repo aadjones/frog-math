@@ -21,7 +21,13 @@ import {
 
 import { drawAnimationFrame } from "./animation";
 import { loadFrogImageForP5 } from "./imageLoader";
-import { createTouchScrollState, setupTouchScroll, getCameraX, resetManualPosition, getSimpleCameraX } from "./touchScroll";
+import {
+  createTouchScrollState,
+  setupTouchScroll,
+  getCameraX,
+  resetManualPosition,
+  getSimpleCameraX,
+} from "./touchScroll";
 import "../ui/sharedStyle.css";
 
 const HOP_RANGE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // change range if you like
@@ -32,13 +38,13 @@ let ready = false;
 export function mountSingle(root: HTMLElement) {
   root.innerHTML = "";
   addBackToMenu(root);
-  
+
   // Touch/swipe state for mobile scrolling
   const touchScrollState = createTouchScrollState();
-  
+
   // Game state
   const gameState = createGameState();
-  
+
   new p5((p) => {
     let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
     let frogImage: p5.Image | null = null;
@@ -46,7 +52,9 @@ export function mountSingle(root: HTMLElement) {
     function startHop(direction: 1 | -1) {
       if (gameState.animating) return;
       const targetIdx =
-        hopSize === 0 ? gameState.frogIdx : nextIndex(gameState.frogIdx, hopSize, direction);
+        hopSize === 0
+          ? gameState.frogIdx
+          : nextIndex(gameState.frogIdx, hopSize, direction);
       const padsTravelled = Math.abs(targetIdx - gameState.frogIdx);
       const hopDur = hopDuration(padsTravelled);
       gameState.setFromIdx(gameState.frogIdx);
@@ -142,22 +150,23 @@ export function mountSingle(root: HTMLElement) {
       // Now create canvas
       const canvasElem = p.createCanvas(canvas.w, canvas.h).elt;
       p.textSize(24);
-      
+
       // Add touch events for mobile scrolling
       setupTouchScroll(canvasElem, touchScrollState, {
-        getCurrentCamX: () => getSimpleCameraX(
-          touchScrollState,
-          gameState.animating,
-          gameState.fromIdx,
-          gameState.toIdx,
-          gameState.hopStart,
-          gameState.hopDur,
-          gap,
-          canvas.w,
-          () => p.millis()
-        )
+        getCurrentCamX: () =>
+          getSimpleCameraX(
+            touchScrollState,
+            gameState.animating,
+            gameState.fromIdx,
+            gameState.toIdx,
+            gameState.hopStart,
+            gameState.hopDur,
+            gap,
+            canvas.w,
+            () => p.millis(),
+          ),
       });
-      
+
       ready = true;
 
       // Place belowSketch after the canvas
@@ -277,17 +286,20 @@ export function mountSingle(root: HTMLElement) {
         isReachable: (idx) =>
           idx === gameState.frogIdx ||
           (((idx - gameState.frogIdx) % hopSize) + hopSize) % hopSize === 0,
-        customCamX: getCameraX(touchScrollState, getSimpleCameraX(
+        customCamX: getCameraX(
           touchScrollState,
-          gameState.animating,
-          gameState.fromIdx,
-          gameState.toIdx,
-          gameState.hopStart,
-          gameState.hopDur,
-          gap,
-          canvas.w,
-          () => p.millis()
-        )),
+          getSimpleCameraX(
+            touchScrollState,
+            gameState.animating,
+            gameState.fromIdx,
+            gameState.toIdx,
+            gameState.hopStart,
+            gameState.hopDur,
+            gap,
+            canvas.w,
+            () => p.millis(),
+          ),
+        ),
         showBadge: (frogXw, frogY, camX) => {
           // Adjust badge position for the frog image - move it above the frog
           const badgeX = frogXw - camX;
